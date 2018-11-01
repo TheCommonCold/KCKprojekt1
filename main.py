@@ -19,6 +19,7 @@ from skimage.measure import label
 from skimage import data, util
 io.use_plugin('matplotlib')
 
+#zostawia kolor(w hsv) pomiędzy min i max i zmienia reszte na 0
 def filter_colour(data,min,max):
     for array in data:
         for x in array:
@@ -28,6 +29,7 @@ def filter_colour(data,min,max):
                 x[2]=0
     return data
 
+#zmienia kolor(w hsv) pomiędzy min i max na 1, a reszte na zero
 def filter_color_hard(data,min,max):
     output=[]
     for array in data:
@@ -48,7 +50,6 @@ def background_removal(data):
     data = np.array([[(x[0],(x[1]+1)/2,x[2]) for x in array] for array in data])
     checkpoint.append(hsv2rgb(data))
     data=np.array(filter_color_hard(data,0.4,0.7))
-    print(data.shape)
     data=mp.dilation(data)
     checkpoint.append(data)
     contours = measure.find_contours(data, 0.2)
