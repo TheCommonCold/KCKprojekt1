@@ -20,6 +20,16 @@ from skimage import data, util
 io.use_plugin('matplotlib')
 
 
+def wyswietl(checkpoint):
+    rows = len(checkpoint)
+    columns = 1
+    fig = plt.figure(figsize=(10, rows * 10))
+    for i in range(rows):
+        ax = fig.add_subplot(rows, columns, i + 1)
+        io.imshow(checkpoint[i])
+    io.show()
+
+
 # zostawia kolor(w hsv) pomiędzy min i max i zmienia reszte na 0
 def filter_colour(data, min, max):
     for array in data:
@@ -45,6 +55,7 @@ def filter_color_hard(data, min, max):
     return output
 
 
+# tworzy maske jedynek na wodzie
 def background_removal(data):
     checkpoint = []
     p1, p2 = np.percentile(data, (2, 95))
@@ -60,6 +71,7 @@ def background_removal(data):
     return checkpoint, contours
 
 
+# matematyczny argmin argmax
 def arg_min_max(lista):
     # zwarca argumenty min i max danej listy
     max = min = lista[0]
@@ -74,6 +86,8 @@ def arg_min_max(lista):
             argmax = k
     return argmin, argmax
 
+
+# tworzy maske zer w miejscu lądu
 def outer_removal(img):
     img2 = img.copy()
     maxJ = len(img[0])
@@ -83,36 +97,82 @@ def outer_removal(img):
                 break
             img2[i][j] = 1
         for j in range(1, maxJ):
-            if img[i][maxJ-j] == 1:
+            if img[i][maxJ - j] == 1:
                 break
-            img2[i][maxJ-j] = 1
+            img2[i][maxJ - j] = 1
     return img2
 
-def leave_only_island(img,mask):
+
+# zostawia tylko wyspe (usuwa wode i stół)
+def leave_only_island(img, mask):
     img2 = img.copy()
     for i in range(len(img)):
         for j in range(len(img[0])):
             if mask[i][j]:
-                img2[i][j]=np.array([0,0,0])
+                img2[i][j] = np.array([0, 0, 0])
     return img2
 
-def wyswietl(checkpoint):
-    rows = len(checkpoint)
-    columns = 1
-    fig = plt.figure(figsize=(10, rows * 10))
-    for i in range(rows):
-        ax = fig.add_subplot(rows, columns, i + 1)
-        io.imshow(checkpoint[i])
-    io.show()
+
+# zostawia tylko jeden kolor (niepoprawny grayscale)
+def leave_only_one_color(img, color):
+    if color == "red" or color == "r":
+        color = 0
+    elif color == "green" or color == "g":
+        color = 1
+    elif color == "blue" or color == "b":
+        color = 2
+    return np.array([[(x[color]) for x in array] for array in img])
+
+
+# zwraca minimalną i maksymalną wartość z macierzy
+def minimaxi(img):
+    mini = 2
+    maxi = -1
+    for i in range(len(img)):
+        for j in range(len(img[i])):
+            if img[i][j] > maxi:
+                maxi = img[i][j]
+        if img[i][j] < mini:
+            mini = img[i][j]
+    return mini, maxi
+
+
+# robi zakres od 0 to 1 z węższego
+def ujednolic(img):
+    mini, maxi = minimaxi(img)
+    img = (img - mini) / (maxi - mini)
+    return img
+
+
+# przerabia na 0 i 1 zależnie od threshodu
+def threshold(img, thr):
+    # std = np.std(img)
+    # var = np.var(img)
+    # print(nazwa + " " + str(std) + " " + str(var))
+    return img > thr
+
+
+# Odwrotnie, bo czarny, a nie biały
+def dilation(img):
+    return mp.erosion(img)
+
+
+# Odwrotnie, bo czarny, a nie biały
+def erosion(img):
+    return mp.dilation(img)
+
 
 if __name__ == '__main__':
     start_time = time.time()
-    data = io.imread('2-fried.jpg')
+    data = io.imread('2-fried-16-times.jpg')
     data = img_as_float(data)
     checkpoint, contours = background_removal(data.copy())
 
     checkpoint.append(outer_removal(checkpoint[1]))
-    checkpoint.append(leave_only_island(checkpoint[0],checkpoint[2]))
+    checkpoint.append(leave_only_island(checkpoint[0], checkpoint[2]))
+
+    checkpoint.append(ujednolic(leave_only_one_color(checkpoint[len(checkpoint) - 1].copy(), "red")))
+    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1].copy(), 0.8))
 
     wyswietl(checkpoint)
     print(time.time() - start_time)
