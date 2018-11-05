@@ -96,15 +96,7 @@ def leave_only_island(img,mask):
                 img2[i][j]=np.array([0,0,0])
     return img2
 
-if __name__ == '__main__':
-    start_time = time.time()
-    data = io.imread('2-fried.jpg')
-    data = img_as_float(data)
-    checkpoint, contours = background_removal(data)
-
-    checkpoint.append(outer_removal(checkpoint[1]))
-    checkpoint.append(leave_only_island(checkpoint[0],checkpoint[2]))
-
+def wyswietl(checkpoint):
     rows = len(checkpoint)
     columns = 1
     fig = plt.figure(figsize=(10, rows * 10))
@@ -112,4 +104,15 @@ if __name__ == '__main__':
         ax = fig.add_subplot(rows, columns, i + 1)
         io.imshow(checkpoint[i])
     io.show()
+
+if __name__ == '__main__':
+    start_time = time.time()
+    data = io.imread('2-fried.jpg')
+    data = img_as_float(data)
+    checkpoint, contours = background_removal(data.copy())
+
+    checkpoint.append(outer_removal(checkpoint[1]))
+    checkpoint.append(leave_only_island(checkpoint[0],checkpoint[2]))
+
+    wyswietl(checkpoint)
     print(time.time() - start_time)
