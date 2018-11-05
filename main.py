@@ -16,6 +16,7 @@ from scipy import ndimage as ndi
 from numpy import array
 from skimage.measure import label
 from skimage import data, util
+from matplotlib import colors
 
 io.use_plugin('matplotlib')
 
@@ -24,17 +25,19 @@ def wyswietl(checkpoint):
     rows = len(checkpoint)
     columns = 1
     fig = plt.figure(figsize=(10, rows * 10))
+    ploty=[]
     for i in range(rows):
         ax = fig.add_subplot(rows, columns, i + 1)
+        ploty.append(ax)
         io.imshow(checkpoint[i])
-    io.show()
+    return ploty
 
 
 # zostawia kolor(w hsv) pomiędzy min i max i zmienia reszte na 0
 def filter_colour(data, min, max):
     for array in data:
         for x in array:
-            if (x[0] < min or x[0] > max):
+            if x[0] < min or x[0] > max:
                 x[0] = 0
                 x[1] = 0
                 x[2] = 0
@@ -161,18 +164,41 @@ def dilation(img):
 def erosion(img):
     return mp.dilation(img)
 
+def kontury_do_srodkow(img,ax):
+    contours = measure.find_contours(img, 0.5)
+
+    for n, contour in enumerate(contours):
+        print(len(contour))
+        if (len(contour)>10):
+
+            centroid = np.sum(contour, axis=0) / len(contour)
+            q = np.random.uniform()
+            c = colors.hsv_to_rgb([q, 1, 1])
+            ax.plot(contour[:, 1], contour[:, 0], linewidth=3, color=c)
+            if (q > 0.5):
+                q -= 0.5
+            else:
+                q += 0.5
+            c = colors.hsv_to_rgb([q, 1, 1])
+            ax.plot(centroid[1], centroid[0], marker="o", color=c)
+
 
 if __name__ == '__main__':
     start_time = time.time()
-    data = io.imread('2-fried-16-times.jpg')
+    data = io.imread('5-fried-16-times.jpg')
     data = img_as_float(data)
     checkpoint, contours = background_removal(data.copy())
 
     checkpoint.append(outer_removal(checkpoint[1]))
     checkpoint.append(leave_only_island(checkpoint[0], checkpoint[2]))
 
-    checkpoint.append(ujednolic(leave_only_one_color(checkpoint[len(checkpoint) - 1].copy(), "red")))
-    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1].copy(), 0.8))
 
-    wyswietl(checkpoint)
+
+    checkpoint.append(ujednolic(leave_only_one_color(checkpoint[len(checkpoint) - 1].copy(), "red")))
+    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1].copy(), 0.95))
+    checkpoint.append(dilation(checkpoint[5]))
+    ploty = wyswietl(checkpoint)
+    kontury_do_srodkow(checkpoint[6],ploty[6])
+
+    io.show()
     print(time.time() - start_time)
