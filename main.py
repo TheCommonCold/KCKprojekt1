@@ -34,10 +34,10 @@ def wyswietl(checkpoint):
 
 
 # zostawia kolor(w hsv) pomiędzy min i max i zmienia reszte na 0
-def filter_colour(data, min, max):
+def filter_colour(data, min, max, hsv):
     for array in data:
         for x in array:
-            if x[0] < min or x[0] > max:
+            if x[hsv] < min or x[hsv] > max:
                 x[0] = 0
                 x[1] = 0
                 x[2] = 0
@@ -45,12 +45,12 @@ def filter_colour(data, min, max):
 
 
 # zmienia kolor(w hsv) pomiędzy min i max na 1, a reszte na zero
-def filter_color_hard(data, min, max):
+def filter_color_hard(data, min, max,hsv):
     output = []
     for array in data:
         temparray = []
         for x in array:
-            if (x[0] < min or x[0] > max):
+            if (x[hsv] < min or x[hsv] > max):
                 temparray.append(0)
             else:
                 temparray.append(1)
@@ -64,9 +64,8 @@ def background_removal(data):
     p1, p2 = np.percentile(data, (2, 95))
     data = exposure.rescale_intensity(data, in_range=(p1, p2))
     data = rgb2hsv(data)
-    data = np.array([[(x[0], (x[1] + 1) / 2, x[2]) for x in array] for array in data])
     checkpoint.append(hsv2rgb(data))
-    data = np.array(filter_color_hard(data, 0.4, 0.7))
+    data = np.array(filter_color_hard(data, 0.4, 0.7,0))
     data = mp.dilation(data)
     checkpoint.append(data)
     contours = measure.find_contours(data, 0.2)
@@ -164,6 +163,15 @@ def dilation(img):
 def erosion(img):
     return mp.dilation(img)
 
+def erosion_loop(data,times):
+    for i in range(times):
+        data=mp.erosion(data)
+    return data
+def dilation_loop(data,times):
+    for i in range(times):
+        data=mp.dilation(data)
+    return data
+
 def kontury_do_srodkow(img,ax):
     contours = measure.find_contours(img, 0.5)
 
@@ -192,13 +200,18 @@ if __name__ == '__main__':
     checkpoint.append(outer_removal(checkpoint[1]))
     checkpoint.append(leave_only_island(checkpoint[0], checkpoint[2]))
 
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.5,1))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.1, 0.2, 0))))
 
+    checkpoint.append(filters.sobel(rgb2gray(checkpoint[len(checkpoint) - 1])))
 
-    checkpoint.append(ujednolic(leave_only_one_color(checkpoint[len(checkpoint) - 1].copy(), "red")))
-    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1].copy(), 0.95))
-    checkpoint.append(dilation(checkpoint[5]))
+    checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1],1))
+
+    #checkpoint.append(ujednolic(leave_only_one_color(checkpoint[len(checkpoint) - 1].copy(), "red")))
+    #checkpoint.append(threshold(checkpoint[len(checkpoint) - 1].copy(), 0.95))
+    #checkpoint.append(dilation(checkpoint[5]))
     ploty = wyswietl(checkpoint)
-    kontury_do_srodkow(checkpoint[6],ploty[6])
+    #kontury_do_srodkow(checkpoint[6],ploty[6])
 
     io.show()
     print(time.time() - start_time)
