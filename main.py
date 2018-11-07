@@ -172,24 +172,51 @@ def dilation_loop(data,times):
         data=mp.dilation(data)
     return data
 
+#daje numer największego contouru
+def najwiekszy_contour(contours):
+    max=0
+    max_n=0
+    for n, contour in enumerate(contours):
+        if len(contour)>max:
+            max=len(contour)
+            max_n=n
+    return max_n
+
+def centroid_z_konturu(contour,ax):
+    centroid = np.sum(contour, axis=0) / len(contour)
+    q = np.random.uniform()
+    c = colors.hsv_to_rgb([q, 1, 1])
+    ax.plot(contour[:, 1], contour[:, 0], linewidth=3, color=c)
+    if (q > 0.5):
+        q -= 0.5
+    else:
+        q += 0.5
+    c = colors.hsv_to_rgb([q, 1, 1])
+    ax.plot(centroid[1], centroid[0], marker="o", color=c)
+
 def kontury_do_srodkow(img,ax):
     contours = measure.find_contours(img, 0.5)
 
     for n, contour in enumerate(contours):
-        print(len(contour))
         if (len(contour)>10):
+            centroid_z_konturu(contour,ax)
 
-            centroid = np.sum(contour, axis=0) / len(contour)
-            q = np.random.uniform()
-            c = colors.hsv_to_rgb([q, 1, 1])
-            ax.plot(contour[:, 1], contour[:, 0], linewidth=3, color=c)
-            if (q > 0.5):
-                q -= 0.5
-            else:
-                q += 0.5
-            c = colors.hsv_to_rgb([q, 1, 1])
-            ax.plot(centroid[1], centroid[0], marker="o", color=c)
+def usuwanko_punktow(contour):
+    test_dist=1
+    delete_array=[];
+    while(len(contour)>6):
+        for x in range(len(contour)-1):
+            for y in range(x,len(contour)-1):
+                dist = math.sqrt((contour[y][0] - contour[x][0])**2 + (contour[y][1] - contour[x][1])**2)
+                if(dist<test_dist):
+                    delete_array.append(y)
+        while(len(contour)-len(delete_array)<6):
+            delete_array.pop()
+        contour=np.delete(contour,delete_array ,0)
+        print(len(contour))
+        test_dist=test_dist+1
 
+    return contour
 
 if __name__ == '__main__':
     start_time = time.time()
@@ -197,21 +224,23 @@ if __name__ == '__main__':
     data = img_as_float(data)
     checkpoint, contours = background_removal(data.copy())
 
-    checkpoint.append(outer_removal(checkpoint[1]))
-    checkpoint.append(leave_only_island(checkpoint[0], checkpoint[2]))
+    #checkpoint.append(outer_removal(checkpoint[1]))
+    #checkpoint.append(leave_only_island(checkpoint[0], checkpoint[2]))
 
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.5,1))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.1, 0.2, 0))))
+    #checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.5,1))))
+    #checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.1, 0.2, 0))))
 
-    checkpoint.append(filters.sobel(rgb2gray(checkpoint[len(checkpoint) - 1])))
 
-    checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1],1))
 
     #checkpoint.append(ujednolic(leave_only_one_color(checkpoint[len(checkpoint) - 1].copy(), "red")))
     #checkpoint.append(threshold(checkpoint[len(checkpoint) - 1].copy(), 0.95))
     #checkpoint.append(dilation(checkpoint[5]))
     ploty = wyswietl(checkpoint)
-    #kontury_do_srodkow(checkpoint[6],ploty[6])
+    contours = measure.find_contours(checkpoint[len(checkpoint)-1], 0.5)
+    coords = measure.approximate_polygon(contours[najwiekszy_contour(contours)], tolerance=8)
+    coords=usuwanko_punktow(coords)
+    centroid_z_konturu(coords,ploty[len(checkpoint)-1])
+    #kontury_do_srodkow(checkpoint[len(checkpoint)-1],ploty[len(checkpoint)-1])
 
     io.show()
     print(time.time() - start_time)
