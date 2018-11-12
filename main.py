@@ -24,7 +24,7 @@ io.use_plugin('matplotlib')
 def wyswietl(checkpoint):
     rows = len(checkpoint)
     columns = 1
-    fig = plt.figure(figsize=(10, rows * 10))
+    fig = plt.figure(figsize=(5, rows * 5))
     ploty=[]
     for i in range(rows):
         ax = fig.add_subplot(rows, columns, i + 1)
@@ -45,12 +45,12 @@ def filter_colour(data, min, max, hsv):
 
 
 # zmienia kolor(w hsv) pomiędzy min i max na 1, a reszte na zero
-def filter_color_hard(data, min, max,hsv):
+def filter_colour_hard(data, min, max,hsv):
     output = []
     for array in data:
         temparray = []
         for x in array:
-            if (x[hsv] < min or x[hsv] > max):
+            if x[hsv] < min or x[hsv] > max:
                 temparray.append(0)
             else:
                 temparray.append(1)
@@ -65,7 +65,7 @@ def background_removal(data):
     data = exposure.rescale_intensity(data, in_range=(p1, p2))
     data = rgb2hsv(data)
     checkpoint.append(hsv2rgb(data))
-    data = np.array(filter_color_hard(data, 0.4, 0.7,0))
+    data = np.array(filter_colour_hard(data, 0.4, 0.7,0))
     data = mp.dilation(data)
     checkpoint.append(data)
     contours = measure.find_contours(data, 0.2)
@@ -173,33 +173,28 @@ def dilation_loop(data,times):
     return data
 
 #daje numer największego contouru
-def najwiekszy_contour(contours):
-    max=0
-    max_n=0
-    for n, contour in enumerate(contours):
-        if len(contour)>max:
-            max=len(contour)
-            max_n=n
-    return max_n
+def sort_contourow(contours):
+    return sorted(contours,key=len)
 
-def centroid_z_konturu(contour,ax):
+def top_contoury(contours,ile):
+    output=[]
+    for i in range(len(contours)-ile,len(contours)):
+        output.append(contours[i])
+    return output
+
+def centroid_z_konturu(contour,ax,colour):
     centroid = np.sum(contour, axis=0) / len(contour)
     q = np.random.uniform()
     c = colors.hsv_to_rgb([q, 1, 1])
-    ax.plot(contour[:, 1], contour[:, 0], linewidth=3, color=c)
-    if (q > 0.5):
-        q -= 0.5
-    else:
-        q += 0.5
-    c = colors.hsv_to_rgb([q, 1, 1])
+    #ax.plot(contour[:, 1], contour[:, 0], linewidth=3, color=c)
+
+    c = colors.hsv_to_rgb([colour, 1, 1])
     ax.plot(centroid[1], centroid[0], marker="o", color=c)
 
-def kontury_do_srodkow(img,ax):
-    contours = measure.find_contours(img, 0.5)
-
+def kontury_do_srodkow(contours,ax,colour):
     for n, contour in enumerate(contours):
         if (len(contour)>10):
-            centroid_z_konturu(contour,ax)
+            centroid_z_konturu(contour,ax,colour)
 
 def usuwanko_punktow(contour):
     test_dist=1
@@ -218,29 +213,98 @@ def usuwanko_punktow(contour):
 
     return contour
 
+def srednia_kanalu(data,rgb):
+    sum=0
+    n=0
+    for array in data:
+        for x in array:
+            if x[0]!=0 and x[1]!=0 and x[2]!=0:
+                sum = sum + x[rgb]
+                n=n+1
+    return sum/n
+
+
+def findsheep(checkpoint,start):
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.18, 0.25, 0))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 2))))
+    checkpoint.append(erosion_loop(checkpoint[len(checkpoint) - 1], 1))
+    checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 8))
+    checkpoint.append(threshold(rgb2gray(checkpoint[len(checkpoint) - 1]), 0.4))
+
+def findforest(checkpoint,start):
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.13, 0.18, 0))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.4, 1, 1))))
+    checkpoint.append(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.4, 2)))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
+    checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 8))
+    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.2))
+
+def findclay(checkpoint,start):
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.08, 0))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
+    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 2))
+    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.2))
+
+def findmountains(checkpoint, start):
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.1, 0))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.0, 0.5, 1))))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
+    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 8))
+    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.15))
+
+def findwheat(checkpoint, start):
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.07, 0.13, 0))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.6, 1, 1))))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
+    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 3))
+    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.15))
+
 if __name__ == '__main__':
     start_time = time.time()
     data = io.imread('5-fried-16-times.jpg')
     data = img_as_float(data)
     checkpoint, contours = background_removal(data.copy())
 
-    #checkpoint.append(outer_removal(checkpoint[1]))
-    #checkpoint.append(leave_only_island(checkpoint[0], checkpoint[2]))
+    checkpoint.append(outer_removal(checkpoint[1]))
+    checkpoint.append(leave_only_island(checkpoint[0], checkpoint[2]))
 
     #checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.5,1))))
-    #checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.1, 0.2, 0))))
+    print(srednia_kanalu(checkpoint[3],0))
+    print(srednia_kanalu(checkpoint[3], 1))
+    print(srednia_kanalu(checkpoint[3], 2))
 
 
-
-    #checkpoint.append(ujednolic(leave_only_one_color(checkpoint[len(checkpoint) - 1].copy(), "red")))
-    #checkpoint.append(threshold(checkpoint[len(checkpoint) - 1].copy(), 0.95))
-    #checkpoint.append(dilation(checkpoint[5]))
+    findforest(checkpoint,3)
+    contours1 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
+    findsheep(checkpoint,3)
+    contours2 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
+    findclay(checkpoint,3)
+    contours3 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
+    findmountains(checkpoint, 3)
+    contours4 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
+    findwheat(checkpoint, 3)
+    contours5 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.14)
     ploty = wyswietl(checkpoint)
-    contours = measure.find_contours(checkpoint[len(checkpoint)-1], 0.5)
-    coords = measure.approximate_polygon(contours[najwiekszy_contour(contours)], tolerance=8)
-    coords=usuwanko_punktow(coords)
-    centroid_z_konturu(coords,ploty[len(checkpoint)-1])
-    #kontury_do_srodkow(checkpoint[len(checkpoint)-1],ploty[len(checkpoint)-1])
+    contours1 = sort_contourow(contours1)
+    contours1 = top_contoury(contours1,4)
+    kontury_do_srodkow(contours1, ploty[0], 0.25)
+    contours2 = sort_contourow(contours2)
+    contours2 = top_contoury(contours2, 4)
+    kontury_do_srodkow(contours2, ploty[0], 0.4)
+    contours3 = sort_contourow(contours3)
+    contours3 = top_contoury(contours3, 3)
+    kontury_do_srodkow(contours3, ploty[0], 0)
+    contours4 = sort_contourow(contours4)
+    contours4 = top_contoury(contours4, 3)
+    kontury_do_srodkow(contours4, ploty[0], 0.8)
+    contours5 = sort_contourow(contours5)
+    contours5 = top_contoury(contours5, 5)
+    kontury_do_srodkow(contours5, ploty[0], 0.7)
+
+    #coords = measure.approximate_polygon(contours[najwiekszy_contour(contours)], tolerance=2)
+    #coords=usuwanko_punktow(coords)
 
     io.show()
     print(time.time() - start_time)
