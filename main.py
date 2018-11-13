@@ -107,6 +107,7 @@ def outer_removal(img):
 
 # zostawia tylko wyspe (usuwa wode i stół)
 def leave_only_island(img, mask):
+    mask=dilation_loop(mask,20)
     img2 = img.copy()
     for i in range(len(img)):
         for j in range(len(img[0])):
@@ -241,10 +242,11 @@ def findforest(checkpoint,start):
     checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.2))
 
 def findclay(checkpoint,start):
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.08, 0))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.07, 0))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
-    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 2))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.2, 0.9, 1))))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 2))
+    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 4))
     checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.2))
 
 def findmountains(checkpoint, start):
@@ -263,7 +265,7 @@ def findwheat(checkpoint, start):
 
 if __name__ == '__main__':
     start_time = time.time()
-    data = io.imread('5-fried-16-times.jpg')
+    data = io.imread('2-fried-16-times.jpg')
     data = img_as_float(data)
     checkpoint, contours = background_removal(data.copy())
 
@@ -274,7 +276,6 @@ if __name__ == '__main__':
     print(srednia_kanalu(checkpoint[3],0))
     print(srednia_kanalu(checkpoint[3], 1))
     print(srednia_kanalu(checkpoint[3], 2))
-
 
     findforest(checkpoint,3)
     contours1 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
