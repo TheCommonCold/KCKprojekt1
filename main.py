@@ -16,6 +16,7 @@ from scipy import ndimage as ndi
 from numpy import array
 from skimage.measure import label
 from skimage import data, util
+import cv2 as cv
 from matplotlib import colors
 
 io.use_plugin('matplotlib')
@@ -234,7 +235,7 @@ def findsheep(checkpoint,start):
     checkpoint.append(threshold(rgb2gray(checkpoint[len(checkpoint) - 1]), 0.4))
 
 def findforest(checkpoint,start):
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.13, 0.18, 0))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.13, 0.2, 0))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.4, 1, 1))))
     checkpoint.append(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.4, 2)))
     checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
@@ -244,10 +245,10 @@ def findforest(checkpoint,start):
 def findclay(checkpoint,start):
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.07, 0))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.2, 0.9, 1))))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 2))
-    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 4))
-    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.2))
+    #checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 5))
+    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 6))
+    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.05))
 
 def findmountains(checkpoint, start):
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.1, 0))))
@@ -273,9 +274,6 @@ if __name__ == '__main__':
     checkpoint.append(leave_only_island(checkpoint[0], checkpoint[2]))
 
     #checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.5,1))))
-    print(srednia_kanalu(checkpoint[3],0))
-    print(srednia_kanalu(checkpoint[3], 1))
-    print(srednia_kanalu(checkpoint[3], 2))
 
     findforest(checkpoint,3)
     contours1 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
@@ -285,8 +283,8 @@ if __name__ == '__main__':
     contours3 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
     findmountains(checkpoint, 3)
     contours4 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
-    findwheat(checkpoint, 3)
-    contours5 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.14)
+    #findwheat(checkpoint, 3)
+    #contours5 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.14)
     ploty = wyswietl(checkpoint)
     contours1 = sort_contourow(contours1)
     contours1 = top_contoury(contours1,4)
@@ -300,9 +298,9 @@ if __name__ == '__main__':
     contours4 = sort_contourow(contours4)
     contours4 = top_contoury(contours4, 3)
     kontury_do_srodkow(contours4, ploty[0], 0.8)
-    contours5 = sort_contourow(contours5)
-    contours5 = top_contoury(contours5, 5)
-    kontury_do_srodkow(contours5, ploty[0], 0.7)
+    #contours5 = sort_contourow(contours5)
+    #contours5 = top_contoury(contours5, 5)
+    #kontury_do_srodkow(contours5, ploty[0], 0.7)
 
     #coords = measure.approximate_polygon(contours[najwiekszy_contour(contours)], tolerance=2)
     #coords=usuwanko_punktow(coords)

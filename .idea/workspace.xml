@@ -14,7 +14,11 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
+<<<<<<< Updated upstream
     <SUITE FILE_PATH="coverage/KCKprojekt1$main.coverage" NAME="main Coverage Results" MODIFIED="1542099108454" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+=======
+    <SUITE FILE_PATH="coverage/KCKprojekt1$main.coverage" NAME="main Coverage Results" MODIFIED="1542056121086" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+>>>>>>> Stashed changes
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -68,7 +72,7 @@
     <session id="-250155098">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="2" />
+          <entry key="project.closed" value="3" />
           <entry key="project.open.time.0" value="1" />
           <entry key="project.open.time.4" value="2" />
           <entry key="project.open.time.5" value="1" />
@@ -78,12 +82,12 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="1293" />
+          <entry key="py" value="1296" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="1293" />
+          <entry key="Python" value="1296" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -105,11 +109,19 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
             <state relative-caret-position="235">
               <caret line="304" column="4" selection-start-line="304" selection-start-column="4" selection-end-line="304" selection-end-column="4" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
                 <marker date="1542099108432" expanded="true" signature="6031:6033" ph="..." />
+=======
+            <state relative-caret-position="305">
+              <caret line="235" column="91" selection-start-line="235" selection-start-column="91" selection-end-line="235" selection-end-column="91" />
+              <folding>
+                <element signature="e#0#19#0" expanded="true" />
+                <marker date="1542056121074" expanded="true" signature="5829:6001" ph="..." />
+>>>>>>> Stashed changes
               </folding>
             </state>
           </provider>
@@ -233,14 +245,22 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
+<<<<<<< Updated upstream
     <frame x="-7" y="-7" width="1295" height="695" extended-state="6" />
+=======
+    <frame x="-7" y="-7" width="2575" height="1415" extended-state="6" />
+>>>>>>> Stashed changes
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15789473" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
+<<<<<<< Updated upstream
       <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.43594307" />
+=======
+      <window_info anchor="bottom" id="Run" order="2" weight="0.10686427" />
+>>>>>>> Stashed changes
       <window_info anchor="bottom" id="Debug" order="3" weight="0.3978159" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -255,7 +275,11 @@
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+<<<<<<< Updated upstream
       <window_info anchor="right" id="SciView" order="3" visible="true" weight="0.84210527" />
+=======
+      <window_info active="true" anchor="right" id="SciView" order="3" visible="true" weight="0.8449304" />
+>>>>>>> Stashed changes
       <window_info anchor="right" id="Database" order="4" weight="0.32962227" />
     </layout>
   </component>
@@ -271,8 +295,17 @@
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python35/Lib/site-packages/skimage/color/colorconv.py" />
     <entry file="file://$PROJECT_DIR$/venv/Lib/site-packages/skimage/io/_plugins/matplotlib_plugin.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
         <state relative-caret-position="97">
           <caret line="76" selection-start-line="76" selection-end-line="76" />
+=======
+        <state relative-caret-position="305">
+          <caret line="235" column="91" selection-start-line="235" selection-start-column="91" selection-end-line="235" selection-end-column="91" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+            <marker date="1542056121074" expanded="true" signature="5829:6001" ph="..." />
+          </folding>
+>>>>>>> Stashed changes
         </state>
       </provider>
     </entry>
