@@ -240,21 +240,30 @@ def polygon_area(corners):
     return area
 
 
-def rozciagnij_3_wartosci(image):
+def rozciagnij_3_wartosci(image, first=True,second=True,third=True):
     img = image.copy()
     m = []
+    l = []
+    if first:
+        l.append(0)
+    if second:
+        l.append(1)
+    if third:
+        l.append(2)
+
     for i in range(3):
         m.append([1, 0])
     for i in range(len(img)):
         for j in range(len(img[i])):
-            for k in range(3):
+            for k in l:
                 if img[i][j][k] < m[k][0]:
                     m[k][0] = img[i][j][k]
                 if img[i][j][k] > m[k][1]:
                     m[k][1] = img[i][j][k]
+
     for i in range(len(img)):
         for j in range(len(img[i])):
-            for k in range(3):
+            for k in l:
                 if (m[k][1] - m[k][0])>0:
                     img[i][j][k] = (img[i][j][k] - m[k][0]) / (m[k][1] - m[k][0])
     return img
