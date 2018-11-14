@@ -225,6 +225,18 @@ def srednia_kanalu(data,rgb):
                 n=n+1
     return sum/n
 
+#suposedly calculates the area of any polygon
+def polygon_area(corners):
+    #przyklad: corners = [(2.0, 1.0), (4.0, 5.0), (7.0, 8.0)]
+    n = len(corners) # of corners
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += corners[i][0] * corners[j][1]
+        area -= corners[j][0] * corners[i][1]
+    area = abs(area) / 2.0
+    return area
+
 
 def findsheep(checkpoint,start):
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.18, 0.25, 0))))
