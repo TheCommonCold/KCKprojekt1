@@ -20,7 +20,10 @@ import cv2 as cv
 from matplotlib import colors
 
 io.use_plugin('matplotlib')
-
+# Wymiary:
+# Plansza = 263
+# Kolko  = 24
+# maly szesciokat = 45
 
 def wyswietl(checkpoint):
     rows = len(checkpoint)
