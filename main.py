@@ -240,7 +240,27 @@ def polygon_area(corners):
     return area
 
 
-def findsheep(checkpoint,start):
+def rozciagnij_3_wartosci(image):
+    img = image.copy()
+    m = []
+    for i in range(3):
+        m.append([1, 0])
+    for i in range(len(img)):
+        for j in range(len(img[i])):
+            for k in range(3):
+                if img[i][j][k] < m[k][0]:
+                    m[k][0] = img[i][j][k]
+                if img[i][j][k] > m[k][1]:
+                    m[k][1] = img[i][j][k]
+    for i in range(len(img)):
+        for j in range(len(img[i])):
+            for k in range(3):
+                if (m[k][1] - m[k][0])>0:
+                    img[i][j][k] = (img[i][j][k] - m[k][0]) / (m[k][1] - m[k][0])
+    return img
+
+
+def findsheep(checkpoint, start):
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.18, 0.25, 0))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 2))))
