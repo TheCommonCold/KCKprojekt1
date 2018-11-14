@@ -16,7 +16,6 @@ from scipy import ndimage as ndi
 from numpy import array
 from skimage.measure import label
 from skimage import data, util
-import cv2 as cv
 from matplotlib import colors
 
 io.use_plugin('matplotlib')
@@ -111,7 +110,7 @@ def outer_removal(img):
 
 # zostawia tylko wyspe (usuwa wode i stół)
 def leave_only_island(img, mask):
-    mask=dilation_loop(mask,20)
+    mask=dilation_loop(mask,15)
     img2 = img.copy()
     for i in range(len(img)):
         for j in range(len(img[0])):
@@ -179,7 +178,7 @@ def dilation_loop(data,times):
 
 #daje numer największego contouru
 def sort_contourow(contours):
-    return sorted(contours,key=len)
+    return sorted(contours, key=lambda x: polygon_area(x))
 
 def top_contoury(contours,ile):
     output=[]
@@ -246,7 +245,7 @@ def findsheep(checkpoint,start):
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 2))))
     checkpoint.append(erosion_loop(checkpoint[len(checkpoint) - 1], 1))
-    checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 8))
+    checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 7))
     checkpoint.append(threshold(rgb2gray(checkpoint[len(checkpoint) - 1]), 0.4))
 
 def findforest(checkpoint,start):
@@ -261,7 +260,7 @@ def findclay(checkpoint,start):
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.07, 0))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
     #checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 5))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 3))
     checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 6))
     checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.05))
 
@@ -269,19 +268,20 @@ def findmountains(checkpoint, start):
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.1, 0))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.0, 0.5, 1))))
     checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
-    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 8))
+    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 6))
     checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.15))
 
 def findwheat(checkpoint, start):
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.07, 0.13, 0))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.06, 0.14, 0))))
     checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.6, 1, 1))))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
-    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 3))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.6, 1, 2))))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 2))
+    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 4))
     checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.15))
 
 if __name__ == '__main__':
     start_time = time.time()
-    data = io.imread('2-fried-16-times.jpg')
+    data = io.imread('8-fried-16-times.jpg')
     data = img_as_float(data)
     checkpoint, contours = background_removal(data.copy())
 
@@ -298,8 +298,8 @@ if __name__ == '__main__':
     contours3 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
     findmountains(checkpoint, 3)
     contours4 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
-    #findwheat(checkpoint, 3)
-    #contours5 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.14)
+    findwheat(checkpoint, 3)
+    contours5 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.14)
     ploty = wyswietl(checkpoint)
     contours1 = sort_contourow(contours1)
     contours1 = top_contoury(contours1,4)
@@ -313,9 +313,9 @@ if __name__ == '__main__':
     contours4 = sort_contourow(contours4)
     contours4 = top_contoury(contours4, 3)
     kontury_do_srodkow(contours4, ploty[0], 0.8)
-    #contours5 = sort_contourow(contours5)
-    #contours5 = top_contoury(contours5, 5)
-    #kontury_do_srodkow(contours5, ploty[0], 0.7)
+    contours5 = sort_contourow(contours5)
+    contours5 = top_contoury(contours5, 4)
+    kontury_do_srodkow(contours5, ploty[0], 0.7)
 
     #coords = measure.approximate_polygon(contours[najwiekszy_contour(contours)], tolerance=2)
     #coords=usuwanko_punktow(coords)
