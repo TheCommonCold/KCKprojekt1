@@ -71,11 +71,14 @@ def filter_colour_hard(data, min, max, hsv):
 # tworzy maske jedynek na wodzie
 def background_removal(data):
     checkpoint = []
-    p1, p2 = np.percentile(data, (2, 95))
+    p1, p2 = np.percentile(data, (1, 92))
     data = exposure.rescale_intensity(data, in_range=(p1, p2))
     data = rgb2hsv(data)
     checkpoint.append(hsv2rgb(data))
-    data = np.array(filter_colour_hard(data, 0.4, 0.7, 0))
+    data = np.array(filter_colour(data, 0.5, 0.7, 0))
+    data = np.array(filter_colour(data, 0.1, 1, 1))
+    data = np.array(rgb2hsv(filter_colour(hsv2rgb(data), 0.2, 1, 2)))
+    data = np.array(filter_colour_hard(data, 0.1, 1, 2))
     data = mp.dilation(data)
     checkpoint.append(data)
     contours = measure.find_contours(data, 0.2)
