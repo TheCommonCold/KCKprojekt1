@@ -31,6 +31,7 @@ io.use_plugin('matplotlib')
 # maly szesciokat = 45
 
 def wyswietl(checkpoint, nazwa):
+
     rows = len(checkpoint)
     columns = 1
     fig = plt.figure(figsize=(5, rows * 5))
@@ -40,6 +41,7 @@ def wyswietl(checkpoint, nazwa):
         ax.set_title(nazwa)
         ploty.append(ax)
         io.imshow(checkpoint[i])
+
     return ploty
 
 
@@ -348,12 +350,12 @@ def fill_contour_with_ones_stary(img):
     return img
 
 
-
-def fill_contour_with_ones(img,srodek):
-    srodek[0]=int(srodek[0])
+def fill_contour_with_ones(img, srodek):
+    srodek[0] = int(srodek[0])
     srodek[1] = int(srodek[1])
 
     return img
+
 
 def doprecyzuj_narozniki(coord, img, dodawane, dokladnosc=20):
     to_check = [0, 0]
@@ -448,13 +450,17 @@ def fill_coords(coords_all):
         coords[i] = coords_all[0]
     offset = 0
     for i in range(len(coords_all)):
-        if coords_all[i][0] + offset < coords[0][0] or (coords_all[i][0] <= coords[0][0] and coords_all[i][1] < coords[0][1]):
+        if coords_all[i][0] + offset < coords[0][0] or (
+                coords_all[i][0] <= coords[0][0] and coords_all[i][1] < coords[0][1]):
             coords[0] = coords_all[i]
-        if coords_all[i][1] + offset < coords[1][1] or (coords_all[i][1] <= coords[1][1] and coords_all[i][0] > coords[1][0]):
+        if coords_all[i][1] + offset < coords[1][1] or (
+                coords_all[i][1] <= coords[1][1] and coords_all[i][0] > coords[1][0]):
             coords[1] = coords_all[i]
-        if coords_all[i][0] - offset > coords[2][0] or (coords_all[i][0] >= coords[2][0] and coords_all[i][1] > coords[2][1]):
+        if coords_all[i][0] - offset > coords[2][0] or (
+                coords_all[i][0] >= coords[2][0] and coords_all[i][1] > coords[2][1]):
             coords[2] = coords_all[i]
-        if coords_all[i][1] - offset > coords[3][1] or (coords_all[i][1] >= coords[3][1] and coords_all[i][0] < coords[3][0]):
+        if coords_all[i][1] - offset > coords[3][1] or (
+                coords_all[i][1] >= coords[3][1] and coords_all[i][0] < coords[3][0]):
             coords[3] = coords_all[i]
     # if distance_between_two_points(coords[0], coords[3])<distance_between_two_points(coords[0], coords[1]):
     #     for i in range(len(coords_all)):
@@ -478,7 +484,7 @@ def distance_between_two_points(coord1, coord2):
 
 
 def cycle_coords_if_rectangle(coords, para):
-    print("para",para)
+    print("para", para)
     print("coords", coords)
     coords2 = coords.copy()
     if para == [0, 3]:
@@ -495,7 +501,7 @@ def cycle_coords_if_not_rect(coords, exception):
     return coords2, 0
 
 
-def define_para( dist, coords):
+def define_para(dist, coords):
     para = [0, 1]
     for i in range(1, 3):
         if dist * 1.1 > distance_between_two_points(coords[0], coords[i]) > dist * 0.9:
@@ -508,7 +514,7 @@ def define_przypadek(coords, dist):
     przypadek = 0
     for i in range(2):
         if distance_between_two_points(coords[0 + i], coords[2 + i]) < dist * 1.76:
-            print("debug",distance_between_two_points(coords[0 + i], coords[2 + i])/dist)
+            print("debug", distance_between_two_points(coords[0 + i], coords[2 + i]) / dist)
             przypadek = 1
     return przypadek
 
@@ -528,13 +534,14 @@ def define_exception(coords, dist):
             break
     return exception
 
+
 def transform_if_rectangle(img, coords):
     left = 3000. - 150.
     right = 1000. + 150.
     top = 0.
     bot = 3000. - 56.
     dst = np.array([[left, top], [right, top], [right, bot], [left, bot]], dtype="float32")
-
+    #
     tmp = coords[:, 0].copy()
     coords[:, 0] = coords[:, 1].copy()
     coords[:, 1] = tmp
@@ -568,18 +575,20 @@ def transform_if_not_rect(img, coords):
     warp = tf.warp(img, tform3, output_shape=(len(img), len(img[0])))
     return warp
 
+
 def srodek_jedynek(img):
-    srodek=[0,0]
-    liczba=0
+    srodek = [0, 0]
+    liczba = 0
     for i in range(len(img)):
         for j in range(len(img[0])):
             if img[i][j] == 1:
-                liczba+=1
-                srodek[0]+=i
+                liczba += 1
+                srodek[0] += i
                 srodek[1] += j
-    srodek[0] /=liczba
+    srodek[0] /= liczba
     srodek[1] /= liczba
     return srodek
+
 
 # suposedly calculates the area of any polygon
 def polygon_area(corners):
@@ -593,9 +602,10 @@ def polygon_area(corners):
     area = abs(area) / 2.0
     return area
 
+
 def calc_min_dist_between_coords(coords):
     dist = distance_between_two_points(coords[0], coords[1])
-    ind=1
+    ind = 1
     for i in range(4):
         for j in range(i + 1, 4):
             dist2 = distance_between_two_points(coords[i], coords[j])
@@ -603,23 +613,23 @@ def calc_min_dist_between_coords(coords):
                 dist = dist2
                 if i == 0:
                     ind = j
-            print (dist2, i, j)
+            print(dist2, i, j)
     return dist, [0, ind]
 
 
-def kontury_debug(img, ax2):
+def kontury_debug(img):
     # Find contours at a constant value of 0.8
     contours = measure.find_contours(img, 0.8)
-    max=0
-    ind=0
+    max = 0
+    ind = 0
     for i, contour in enumerate(contours):
-        p =polygon_area(contour)
-        if p>max:
-            max=p
-            ind=i
+        p = polygon_area(contour)
+        if p > max:
+            max = p
+            ind = i
 
     coords = fill_coords(contours[ind])
-    dist,para = calc_min_dist_between_coords(coords)
+    dist, para = calc_min_dist_between_coords(coords)
     przypadek = define_przypadek(coords, dist)
 
     print("min dystans miedzy wierch:", dist)
@@ -627,35 +637,86 @@ def kontury_debug(img, ax2):
 
     if przypadek == 0:
         coords, para = cycle_coords_if_rectangle(coords, para)
-        for i in range(4):
-            c = "+r"
-            # if i in para:
-            #     c = "+g"
-            if i == 1:
-                c = "+g"
-            if i == 2:
-                c = "+b"
-            if i == 3:
-                c = "+c"
-            ax2.plot(coords[i, 1], coords[i, 0], c, markersize=15)
+        # for i in range(4):
+        #     c = "+r"
+        #     # if i in para:
+        #     #     c = "+g"
+        #     if i == 1:
+        #         c = "+g"
+        #     if i == 2:
+        #         c = "+b"
+        #     if i == 3:
+        #         c = "+c"
+        #     ax2.plot(coords[i, 1], coords[i, 0], c, markersize=15)
 
     if przypadek == 1:
         exception = define_exception(coords, dist)
         coords, exception = cycle_coords_if_not_rect(coords, exception)
-        for i in range(4):
-            c = "+r"
-            if i == exception:
-                c = "+c"
-            ax2.plot(coords[i, 1], coords[i, 0], c, markersize=15)
+        # for i in range(4):
+        #     c = "+r"
+        #     if i == exception:
+        #         c = "+c"
+        #     ax2.plot(coords[i, 1], coords[i, 0], c, markersize=15)
 
     return np.array(coords, dtype="float32"), przypadek
 
 
+def extract_tile(tile,img):
+    left = 0.
+    right = 550.
+    top = 150.
+    bot = 450.
+    dst = np.array([[left, top], [right, top], [left, bot], [right, bot]], dtype="float32")
+
+    coords = []
+    for i in range(1,5):
+        coords.append(tile[i].copy())
+
+    coords = np.array(coords, dtype="float32")
+    tmp = coords[:, 0].copy()
+    coords[:, 0] = coords[:, 1].copy()
+    coords[:, 1] = tmp
+    tform3 = tf.ProjectiveTransform()
+    tform3.estimate(dst, coords)
+    warp = tf.warp(img, tform3, output_shape=(600, 550))
+    return warp
+
+def krojonko(img,checkpoint):
+    checkpoint.append(img.copy())
+    xs = np.array([725., 980., 1230., 1490., 1740., 2004., 2255., 2515., 2770., 3020., 3275.], dtype="float32")
+    ys = np.array([290., 440., 730., 875., 1170., 1330., 1615., 1760., 2060., 2210., 2505., 2655.], dtype="float32")
+    tile = []
+    for j in range(3):
+        for i in range(3 + j):
+            tile.append([[ys[0 + 2 * j], xs[3 + i * 2 - j]], [ys[1 + 2 * j], xs[2 + i * 2 - j]],
+                               [ys[1 + 2 * j], xs[4 + i * 2 - j]], [ys[2 + 2 * j], xs[2 + i * 2 - j]],
+                               [ys[2 + 2 * j], xs[4 + i * 2 - j]], [ys[3 + 2 * j], xs[3 + i * 2 - j]]])
+    for j in range(2):
+        for i in range(4-j):
+            tile.append([[ys[6 + 2 * j], xs[2 + 2 * i + j]],
+                         [ys[7 + 2 * j], xs[1 + i * 2 + j]],
+                         [ys[7 + 2 * j], xs[3 + i * 2 + j]],
+                         [ys[8 + 2 * j], xs[1 + i * 2 + j]],
+                         [ys[8 + 2 * j], xs[3 + i * 2 + j]],
+                         [ys[9 + 2 * j], xs[2 + i * 2 + j]]])
+    tile = np.array(tile, dtype="float32")
+    print("tile[0]",tile[0])
+    town=[]
+    road=[]
+    for i,p in enumerate(tile):
+        warp = extract_tile(p,img)
+        # ploty[3+i].set_title("Miasto "+str(i))
+        # ploty[3+i].imshow(warp)
+        checkpoint.append(warp.copy())
+
+    return tile,town,road
+
 if __name__ == '__main__':
+
     start_time = time.time()
     # for file in range(21, 30):
-    # for file in [23]:
-    for file in range(31, 43):
+    for file in [26]:
+        # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
         data = io.imread(nazwapliku)
@@ -667,16 +728,19 @@ if __name__ == '__main__':
 
         # srodek = srodek_jedynek(checkpoint[1])
         # checkpoint.append(fill_contour_with_ones(checkpoint[1].copy(),srodek))
-        ploty = wyswietl(checkpoint, nazwapliku)
-        coords, przypadek =kontury_debug(checkpoint[1],ploty[1])
+
+        coords, przypadek = kontury_debug(checkpoint[1])
         warp = 0
         if przypadek == 0:
-            warp = transform_if_rectangle(data, coords)
+            warp = transform_if_rectangle(data, coords.copy())
         if przypadek == 1:
-            warp = transform_if_not_rect(data, coords)
+            warp = transform_if_not_rect(data, coords.copy())
 
+        tile,town,road = krojonko(warp,checkpoint)
+        ploty = wyswietl(checkpoint, nazwapliku)
+        ploty[1].plot(coords[:,1],coords[:,0],"+r", markersize=15)
         timestr = time.strftime("%H-%M-%S")
-        io.imsave('wynik-' + str(file)+'-' + timestr + '-warp.png', warp)
+        io.imsave('wynik-' + str(file) + '-' + timestr + '-warp.png', warp)
         savefig('wynik' + str(file) + timestr + '.png')
         io.show()
 
