@@ -299,6 +299,14 @@ def findwheat(checkpoint, start):
     checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 4))
     checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.15))
 
+def findrobber(checkpoint, start):
+    checkpoint.append(util.invert(checkpoint[start]))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.9, 1, 2))))
+    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.1, 1))))
+    checkpoint.append(leave_only_island(checkpoint[len(checkpoint) - 1], checkpoint[2]))
+    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
+    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 5))
+
 if __name__ == '__main__':
     start_time = time.time()
     data = io.imread('8-fried-16-times.jpg')
@@ -319,7 +327,9 @@ if __name__ == '__main__':
     findmountains(checkpoint, 3)
     contours4 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
     findwheat(checkpoint, 3)
-    contours5 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.14)
+    contours5 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
+    findrobber(checkpoint,3)
+    contours6 = measure.find_contours(checkpoint[len(checkpoint) - 1], 0.5)
     ploty = wyswietl(checkpoint)
     contours1 = sort_contourow(contours1)
     contours1 = top_contoury(contours1,4)
@@ -336,6 +346,9 @@ if __name__ == '__main__':
     contours5 = sort_contourow(contours5)
     contours5 = top_contoury(contours5, 4)
     kontury_do_srodkow(contours5, ploty[0], 0.7)
+    contours6 = sort_contourow(contours6)
+    contours6 = top_contoury(contours6, 1)
+    kontury_do_srodkow(contours6, ploty[0], 0.5)
 
     #coords = measure.approximate_polygon(contours[najwiekszy_contour(contours)], tolerance=2)
     #coords=usuwanko_punktow(coords)
