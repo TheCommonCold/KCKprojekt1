@@ -854,7 +854,6 @@ def the_great_domki_finder(town_img):
     domki=[]
     for town in town_img:
         temp_list.append(pewnosc(findtown(town, checkpoint), 1))
-    print(temp_list)
     index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
     while (value>0.02):
         domki.append(index)
