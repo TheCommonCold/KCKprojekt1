@@ -70,13 +70,17 @@ def filter_colour_hard(data, min, max, hsv):
 
 
 # tworzy maske jedynek na wodzie
+# tworzy maske jedynek na wodzie
 def background_removal(data):
     checkpoint = []
-    p1, p2 = np.percentile(data, (2, 95))
+    p1, p2 = np.percentile(data, (1, 92))
     data = exposure.rescale_intensity(data, in_range=(p1, p2))
     data = rgb2hsv(data)
     checkpoint.append(hsv2rgb(data))
-    data = np.array(filter_colour_hard(data, 0.4, 0.7, 0))
+    data = np.array(filter_colour(data, 0.5, 0.7, 0))
+    data = np.array(filter_colour(data, 0.1, 1, 1))
+    data = np.array(rgb2hsv(filter_colour(hsv2rgb(data), 0.2, 1, 2)))
+    data = np.array(filter_colour_hard(data, 0.1, 1, 2))
     data = mp.dilation(data)
     checkpoint.append(data)
     contours = measure.find_contours(data, 0.2)
@@ -550,7 +554,7 @@ def transform_if_rectangle(img, coords):
     tform3 = tf.ProjectiveTransform()
     tform3.estimate(dst, coords)
     warp = tf.warp(img, tform3, output_shape=(len(img), len(img[0])))
-    return warp
+    return warp,dst
 
 
 def transform_if_not_rect(img, coords):
@@ -572,7 +576,7 @@ def transform_if_not_rect(img, coords):
     tform3 = tf.ProjectiveTransform()
     tform3.estimate(dst, coords)
     warp = tf.warp(img, tform3, output_shape=(len(img), len(img[0])))
-    return warp
+    return warp,dst
 
 
 def srodek_jedynek(img):
@@ -647,7 +651,7 @@ def kontury_debug(img):
         #     if i == 3:
         #         c = "+c"
         #     ax2.plot(coords[i, 1], coords[i, 0], c, markersize=15)
-
+    exception=0
     if przypadek == 1:
         exception = define_exception(coords, dist)
         coords, exception = cycle_coords_if_not_rect(coords, exception)
@@ -657,7 +661,7 @@ def kontury_debug(img):
         #         c = "+c"
         #     ax2.plot(coords[i, 1], coords[i, 0], c, markersize=15)
 
-    return np.array(coords, dtype="float32"), przypadek
+    return np.array(coords, dtype="float32"), przypadek,para,exception
 
 
 def extract_tile(tile, img):
@@ -743,27 +747,47 @@ def krojonko(img, checkpoint):
     road_img = []
     for i, p in enumerate(tile_coords):
         warp = extract_tile(p, img)
-        checkpoint.append(warp.copy())
+        # checkpoint.append(warp.copy())
         tile_img.append(warp.copy())
     for i, p in enumerate(town_coords):
         warp = extract_town(p, img)
-        checkpoint.append(warp.copy())
+        # checkpoint.append(warp.copy())
         town_img.append(warp.copy())
 
     return tile_img, town_img, road_img, tile_coords, town_coords, road_coords
 
-
 def zwroc_pokrojone(data, checkpoint):
-    coords, przypadek = kontury_debug(checkpoint[1])
+    coords, przypadek, para, exception = kontury_debug(checkpoint[1])
     warp = 0
     if przypadek == 0:
-        warp = transform_if_rectangle(data, coords.copy())
+        warp,dst = transform_if_rectangle(data, coords.copy())
     if przypadek == 1:
-        warp = transform_if_not_rect(data, coords.copy())
+        warp,dst = transform_if_not_rect(data, coords.copy())
 
     tile_img, town_img, road_img, tile_coords, town_coords, road_coords = krojonko(warp, checkpoint)
     ploty = wyswietl(checkpoint, nazwapliku)
-    ploty[1].plot(coords[:, 1], coords[:, 0], "+r", markersize=15)
+    if przypadek == 0:
+        for i,v in enumerate(coords):
+            c = "+r"
+            if i in para:
+                c = "+c"
+            ploty[1].plot(coords[i, 1], coords[i, 0], c, markersize=15)
+        for i, v in enumerate(dst):
+            c = "or"
+            if i in para:
+                c = "oc"
+            ploty[1].plot(dst[i, 0], dst[i, 1], c, markersize=7)
+    if przypadek == 1:
+        for i,v in enumerate(coords):
+            c = "+r"
+            if i == exception:
+                c = "+c"
+            ploty[1].plot(coords[i, 1], coords[i, 0], c, markersize=15)
+        for i, v in enumerate(dst):
+            c = "or"
+            if i == exception:
+                c = "oc"
+            ploty[1].plot(dst[i, 0], dst[i, 1], c, markersize=7)
     return warp, tile_img,town_img
 
 
@@ -788,12 +812,16 @@ if __name__ == '__main__':
         file_string = str(file)
         if file < 10:
             file_string = '0' + file_string
-        # io.imsave('wynik-' + file_string + '-' + timestr + '-warp.png', warp)
+        print(file_string)
+        io.imsave('wynik-' + file_string + '-' + timestr + '-warp.png', warp)
         # savefig('wynik-' + file_string + '-' + timestr + '.png')
         # for i, v in enumerate(tile_img):
         #     io.imsave('wynik-' + file_string + '-tile-' + str(i) + '-' + timestr + '-warp.png', v)
-        for i, v in enumerate(town_img):
-            io.imsave('wynik-' + file_string + '-town-' + str(i) + '-' + timestr + '-warp.png', v)
+        # for i, v in enumerate(town_img):
+        #     io.imsave('wynik-' + file_string + '-town-' + str(i) + '-' + timestr + '-warp.png', v)
+        for i, v in enumerate(checkpoint):
+            io.imsave('wynik-' + file_string + '-checkpoint-' + str(i) + '-' + timestr + '-warp.png', v)
+        savefig('wynik-' + file_string + '-' + timestr + '.png')
         io.show()
 
     print("czas wykonywania:", time.time() - start_time)
