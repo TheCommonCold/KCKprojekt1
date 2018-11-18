@@ -680,12 +680,35 @@ def extract_tile(tile, img):
     warp = tf.warp(img, tform3, output_shape=(600, 550))
     return warp
 
+def extract_town(town, img):
+    left = 0.
+    right = 300.
+    top = 0.
+    bot = 300.
+    dst = np.array([[left, top], [right, top], [left, bot], [right, bot]], dtype="float32")
+
+    offset=100.
+    left = town[1]-offset
+    right = town[1]+offset
+    top = town[0]-offset
+    bot = town[0]+offset
+    coords = np.array([[left, top], [right, top], [left, bot], [right, bot]], dtype="float32")
+
+    # tmp = coords[:, 0].copy()
+    # coords[:, 0] = coords[:, 1].copy()
+    # coords[:, 1] = tmp
+    tform3 = tf.ProjectiveTransform()
+    tform3.estimate(dst, coords)
+    warp = tf.warp(img, tform3, output_shape=(300, 300))
+    return warp
 
 def krojonko(img, checkpoint):
     checkpoint.append(img.copy())
     xs = np.array([725., 980., 1230., 1490., 1740., 2004., 2255., 2515., 2770., 3020., 3275.], dtype="float32")
     ys = np.array([290., 440., 730., 875., 1170., 1330., 1615., 1760., 2060., 2210., 2505., 2655.], dtype="float32")
     tile_coords = []
+    town_coords = []
+    road_coords = []
     for j in range(3):
         for i in range(3 + j):
             tile_coords.append([[ys[0 + 2 * j], xs[3 + i * 2 - j]], [ys[1 + 2 * j], xs[2 + i * 2 - j]],
@@ -699,19 +722,33 @@ def krojonko(img, checkpoint):
                                 [ys[8 + 2 * j], xs[1 + i * 2 + j]],
                                 [ys[8 + 2 * j], xs[3 + i * 2 + j]],
                                 [ys[9 + 2 * j], xs[2 + i * 2 + j]]])
+    lista_pomocnicza_1 = [3,4,4,5,5,6]
+    lista_pomocnicza_2 = [3, 2, 2, 1, 1, 0]
+    for i in range(6):
+        for  j in range(lista_pomocnicza_1[i]):
+            town_coords.append([ys[i],xs[2*j+lista_pomocnicza_2[i]]])
+
+    lista_pomocnicza_1 = [6,5,5,4,4,3]
+    lista_pomocnicza_2 = [0,1,1,2,2,3]
+    for i in range(6):
+        for j in range(lista_pomocnicza_1[i]):
+            town_coords.append([ys[i+6], xs[2*j + lista_pomocnicza_2[i]]])
+
     tile_coords = np.array(tile_coords, dtype="float32")
-    print("tile[0]", tile_coords[0])
-    town_coords = []
-    road_coords = []
+    town_coords = np.array(town_coords, dtype="float32")
+    road_coords = np.array(road_coords, dtype="float32")
+
     tile_img = []
     town_img = []
     road_img = []
     for i, p in enumerate(tile_coords):
         warp = extract_tile(p, img)
-        # ploty[3+i].set_title("Miasto "+str(i))
-        # ploty[3+i].imshow(warp)
         checkpoint.append(warp.copy())
         tile_img.append(warp.copy())
+    for i, p in enumerate(town_coords):
+        warp = extract_town(p, img)
+        checkpoint.append(warp.copy())
+        town_img.append(warp.copy())
 
     return tile_img, town_img, road_img, tile_coords, town_coords, road_coords
 
@@ -727,7 +764,7 @@ def zwroc_pokrojone(data, checkpoint):
     tile_img, town_img, road_img, tile_coords, town_coords, road_coords = krojonko(warp, checkpoint)
     ploty = wyswietl(checkpoint, nazwapliku)
     ploty[1].plot(coords[:, 1], coords[:, 0], "+r", markersize=15)
-    return warp, tile_img
+    return warp, tile_img,town_img
 
 
 if __name__ == '__main__':
@@ -745,16 +782,18 @@ if __name__ == '__main__':
 
         checkpoint[1] = erosion_loop(checkpoint[1], 5)
 
-        warp, tile_img = zwroc_pokrojone(data, checkpoint)
+        warp, tile_img,town_img = zwroc_pokrojone(data, checkpoint)
 
         timestr = time.strftime("%H-%M-%S")
         file_string = str(file)
         if file < 10:
             file_string = '0' + file_string
-        io.imsave('wynik-' + file_string + '-' + timestr + '-warp.png', warp)
-        savefig('wynik-' + file_string + '-' + timestr + '.png')
-        for i, v in enumerate(tile_img):
-            io.imsave('wynik-' + file_string + '-tile-' + str(i) + '-' + timestr + '-warp.png', v)
+        # io.imsave('wynik-' + file_string + '-' + timestr + '-warp.png', warp)
+        # savefig('wynik-' + file_string + '-' + timestr + '.png')
+        # for i, v in enumerate(tile_img):
+        #     io.imsave('wynik-' + file_string + '-tile-' + str(i) + '-' + timestr + '-warp.png', v)
+        for i, v in enumerate(town_img):
+            io.imsave('wynik-' + file_string + '-town-' + str(i) + '-' + timestr + '-warp.png', v)
         io.show()
 
     print("czas wykonywania:", time.time() - start_time)
