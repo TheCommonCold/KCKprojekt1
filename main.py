@@ -248,6 +248,15 @@ def srednia_kanalu(data, rgb):
                 n = n + 1
     return sum / n
 
+def pewnosc(data, max):
+    sum = 0
+    n=0
+    for array in data:
+        for x in array:
+            sum = sum + x
+            n = n + 1
+    return (sum / n)/max
+
 
 def rozciagnij_3_wartosci(image, first=True, second=True, third=True):
     img = image.copy()
