@@ -1,6 +1,7 @@
 from pylab import *
 import skimage as ski
 from skimage import data, io, filters, exposure, measure, feature
+from skimage.transform import rescale
 from skimage.filters import rank
 from skimage import img_as_float, img_as_ubyte
 from skimage.morphology import disk
@@ -21,6 +22,7 @@ import cv2
 from skimage.feature import corner_harris, corner_subpix, corner_peaks
 from skimage.transform import warp, AffineTransform
 from skimage import transform as tf
+import operator
 
 io.use_plugin('matplotlib')
 
@@ -284,58 +286,6 @@ def rozciagnij_3_wartosci(image, first=True, second=True, third=True):
                 if (m[k][1] - m[k][0]) > 0:
                     img[i][j][k] = (img[i][j][k] - m[k][0]) / (m[k][1] - m[k][0])
     return img
-
-
-def findsheep(checkpoint, start):
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.18, 0.25, 0))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 2))))
-    checkpoint.append(erosion_loop(checkpoint[len(checkpoint) - 1], 1))
-    checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 7))
-    checkpoint.append(threshold(rgb2gray(checkpoint[len(checkpoint) - 1]), 0.4))
-
-
-def findforest(checkpoint, start):
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.13, 0.2, 0))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.4, 1, 1))))
-    checkpoint.append(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.4, 2)))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
-    checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 8))
-    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.2))
-
-
-def findclay(checkpoint, start):
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.07, 0))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.5, 1, 1))))
-    # checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 3))
-    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 6))
-    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.05))
-
-
-def findmountains(checkpoint, start):
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.0, 0.1, 0))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.0, 0.5, 1))))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
-    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 6))
-    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.15))
-
-
-def findwheat(checkpoint, start):
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[start]), 0.06, 0.14, 0))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.6, 1, 1))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.6, 1, 2))))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 2))
-    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 4))
-    checkpoint.append(threshold(checkpoint[len(checkpoint) - 1], 0.15))
-
-def findrobber(checkpoint, start):
-    checkpoint.append(util.invert(checkpoint[start]))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0.9, 1, 2))))
-    checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.1, 1))))
-    checkpoint.append(leave_only_island(checkpoint[len(checkpoint) - 1], checkpoint[2]))
-    checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
-    checkpoint.append(dilation_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 5))
 
 
 # def find_first_one(img,rangei,rangej,reverse=False):
@@ -735,6 +685,148 @@ def krojonko(img, checkpoint):
 
     return tile_img, town_img, road_img, tile_coords, town_coords, road_coords
 
+def findsheep(tile,checkpoint):
+    tempcheckpoint=[]
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0.2, 0.45, 0))))
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1, 1, 1))))
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.5, 1, 2))))
+    #checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
+    #checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 2))
+    return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
+
+
+def findforest(tile,checkpoint):
+    tempcheckpoint = []
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0.3, 0.45, 0))))
+    #checkpoint.append(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.4, 2)))
+    #checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
+    #checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 8))
+    return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
+
+
+def findclay(tile,checkpoint):
+    tempcheckpoint = []
+    tempcheckpoint.append(hsv2rgb( np.array(filter_colour(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0, 0.06, 0))))
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.2, 1, 1))))
+    # checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
+    return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
+
+
+def findmountains(tile,checkpoint):
+    tempcheckpoint = []
+    tempcheckpoint.append( np.array(filter_colour(rescale(tile, 1.0 / 8.0, anti_aliasing=False), 0.75, 1, 2)))
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.75, 1, 0)))
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.75, 1, 1)))
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0, 0.5, 1))))
+    # checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
+    return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
+
+
+def findrobber(tile,checkpoint):
+    tempcheckpoint = []
+    tempcheckpoint.append(util.invert(rescale(tile, 1.0 / 8.0, anti_aliasing=False)))
+    tempcheckpoint.append( np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.9, 1, 0)))
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.9, 1, 1)))
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.9, 1, 2)))
+    # checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
+    return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
+
+def findtown(tile,checkpoint):
+    tempcheckpoint = []
+    tempcheckpoint.append(np.array(filter_colour(rescale(tile, 1.0 / 8.0, anti_aliasing=False), 0, 0.08, 1)))
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.5, 1, 1))))
+    checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
+    return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
+def the_great_tile_finder(tiles):
+    sheep=[]
+    forest=[]
+    clay=[]
+    mountains=[]
+    robber=[]
+    wheat=[]
+    temp_list = []
+    for i in range(19):
+       temp_list.append(pewnosc(findsheep(tiles[i],checkpoint),1))
+    i=0
+    while(i<4):
+       index, value= max(enumerate(temp_list), key=operator.itemgetter(1))
+       sheep.append(index)
+       i = i + 1
+       temp_list[index]=0
+    temp_list = []
+    print(sheep)
+    for i in range(19):
+       temp_list.append(pewnosc(findforest(tiles[i],checkpoint), 1))
+    i=0
+    while(i<4):
+       index, value= max(enumerate(temp_list), key=operator.itemgetter(1))
+       if not index in sheep:
+           forest.append(index)
+           i=i+1
+       temp_list[index]=0
+    temp_list = []
+    print(forest)
+    for i in range(19):
+        temp_list.append(pewnosc(findclay(tiles[i],checkpoint),1))
+
+    i=0
+    while(i<3):
+        index, value= max(enumerate(temp_list), key=operator.itemgetter(1))
+        if not index in sheep and not index in forest:
+            clay.append(index)
+            i=i+1
+        temp_list[index]=0
+    temp_list = []
+    print(clay)
+
+    for i in range(19):
+        temp_list.append(pewnosc(findmountains(tiles[i],checkpoint), 1))
+
+    i = 0
+    while (i < 3):
+        index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
+        if not index in sheep and not index in forest and not index in clay:
+            mountains.append(index)
+            i = i + 1
+        temp_list[index] = 0
+    temp_list = []
+    print(mountains)
+
+    for i in range(19):
+        temp_list.append(pewnosc(findrobber(tiles[i],checkpoint), 1))
+
+    i = 0
+    while (i < 1):
+        index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
+        if not index in sheep and not index in forest and not index in clay and not index in mountains:
+            robber.append(index)
+            i = i + 1
+        temp_list[index] = 0
+    temp_list = []
+    print(robber)
+
+    for i in range(0,19):
+        if not i in sheep and not i in forest and not i in clay and not i in mountains and i not in robber:
+            wheat.append(i)
+    print(wheat)
+
+    return sheep,forest,clay,mountains,robber,wheat
+
+def the_great_domki_finder(town_img):
+    temp_list = []
+    domki=[]
+    for town in town_img:
+        temp_list.append(pewnosc(findtown(town, checkpoint), 1))
+    #print(temp_list)
+    #index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
+    # while (value>0.5):
+    #     index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
+    #     domki.append(index)
+    #     i = i + 1
+    #     temp_list[index] = 0
+    print(domki)
+    return domki
+
 
 def zwroc_pokrojone(data, checkpoint):
     coords, przypadek = kontury_debug(checkpoint[1])
@@ -745,6 +837,10 @@ def zwroc_pokrojone(data, checkpoint):
         warp = transform_if_not_rect(data, coords.copy())
 
     tile_img, town_img, road_img, tile_coords, town_coords, road_coords = krojonko(warp, checkpoint)
+
+    the_great_tile_finder(tile_img)
+    the_great_domki_finder(town_img)
+
     ploty = wyswietl(checkpoint, nazwapliku)
     ploty[1].plot(coords[:, 1], coords[:, 0], "+r", markersize=15)
     return warp, tile_img
@@ -754,7 +850,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [22]:
+    for file in [21]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
@@ -767,14 +863,14 @@ if __name__ == '__main__':
 
         warp, tile_img = zwroc_pokrojone(data, checkpoint)
 
-        timestr = time.strftime("%H-%M-%S")
-        file_string = str(file)
-        if file < 10:
-            file_string = '0' + file_string
-        io.imsave('wynik-' + file_string + '-' + timestr + '-warp.png', warp)
-        savefig('wynik-' + file_string + '-' + timestr + '.png')
-        for i, v in enumerate(tile_img):
-            io.imsave('wynik-' + file_string + '-tile-' + str(i) + '-' + timestr + '-warp.png', v)
+        #timestr = time.strftime("%H-%M-%S")
+        #file_string = str(file)
+        #if file < 10:
+        #    file_string = '0' + file_string
+        #io.imsave('wynik-' + file_string + '-' + timestr + '-warp.png', warp)
+        #savefig('wynik-' + file_string + '-' + timestr + '.png')
+        #for i, v in enumerate(tile_img):
+        #    io.imsave('wynik-' + file_string + '-tile-' + str(i) + '-' + timestr + '-warp.png', v)
         io.show()
 
     print("czas wykonywania:", time.time() - start_time)
