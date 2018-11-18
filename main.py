@@ -772,8 +772,8 @@ def findtown(tile,checkpoint):
     tempcheckpoint = []
     tempcheckpoint.append(np.array(filter_colour(rescale(tile, 1.0 / 8.0, anti_aliasing=False), 0, 0.08, 1)))
     tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.5, 1, 1))))
-    checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
     return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
+
 def the_great_tile_finder(tiles):
     sheep=[]
     forest=[]
@@ -854,13 +854,13 @@ def the_great_domki_finder(town_img):
     domki=[]
     for town in town_img:
         temp_list.append(pewnosc(findtown(town, checkpoint), 1))
-    #print(temp_list)
-    #index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
-    # while (value>0.5):
-    #     index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
-    #     domki.append(index)
-    #     i = i + 1
-    #     temp_list[index] = 0
+    print(temp_list)
+    index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
+    while (value>0.02):
+        domki.append(index)
+        temp_list[index] = 0
+        index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
+
     print(domki)
     return domki
 
@@ -887,7 +887,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [21]:
+    for file in [22]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
