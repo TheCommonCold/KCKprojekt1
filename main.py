@@ -31,7 +31,6 @@ io.use_plugin('matplotlib')
 # maly szesciokat = 45
 
 def wyswietl(checkpoint, nazwa):
-
     rows = len(checkpoint)
     columns = 1
     fig = plt.figure(figsize=(5, rows * 5))
@@ -661,7 +660,7 @@ def kontury_debug(img):
     return np.array(coords, dtype="float32"), przypadek
 
 
-def extract_tile(tile,img):
+def extract_tile(tile, img):
     left = 0.
     right = 550.
     top = 150.
@@ -669,7 +668,7 @@ def extract_tile(tile,img):
     dst = np.array([[left, top], [right, top], [left, bot], [right, bot]], dtype="float32")
 
     coords = []
-    for i in range(1,5):
+    for i in range(1, 5):
         coords.append(tile[i].copy())
 
     coords = np.array(coords, dtype="float32")
@@ -681,41 +680,61 @@ def extract_tile(tile,img):
     warp = tf.warp(img, tform3, output_shape=(600, 550))
     return warp
 
-def krojonko(img,checkpoint):
+
+def krojonko(img, checkpoint):
     checkpoint.append(img.copy())
     xs = np.array([725., 980., 1230., 1490., 1740., 2004., 2255., 2515., 2770., 3020., 3275.], dtype="float32")
     ys = np.array([290., 440., 730., 875., 1170., 1330., 1615., 1760., 2060., 2210., 2505., 2655.], dtype="float32")
-    tile = []
+    tile_coords = []
     for j in range(3):
         for i in range(3 + j):
-            tile.append([[ys[0 + 2 * j], xs[3 + i * 2 - j]], [ys[1 + 2 * j], xs[2 + i * 2 - j]],
-                               [ys[1 + 2 * j], xs[4 + i * 2 - j]], [ys[2 + 2 * j], xs[2 + i * 2 - j]],
-                               [ys[2 + 2 * j], xs[4 + i * 2 - j]], [ys[3 + 2 * j], xs[3 + i * 2 - j]]])
+            tile_coords.append([[ys[0 + 2 * j], xs[3 + i * 2 - j]], [ys[1 + 2 * j], xs[2 + i * 2 - j]],
+                                [ys[1 + 2 * j], xs[4 + i * 2 - j]], [ys[2 + 2 * j], xs[2 + i * 2 - j]],
+                                [ys[2 + 2 * j], xs[4 + i * 2 - j]], [ys[3 + 2 * j], xs[3 + i * 2 - j]]])
     for j in range(2):
-        for i in range(4-j):
-            tile.append([[ys[6 + 2 * j], xs[2 + 2 * i + j]],
-                         [ys[7 + 2 * j], xs[1 + i * 2 + j]],
-                         [ys[7 + 2 * j], xs[3 + i * 2 + j]],
-                         [ys[8 + 2 * j], xs[1 + i * 2 + j]],
-                         [ys[8 + 2 * j], xs[3 + i * 2 + j]],
-                         [ys[9 + 2 * j], xs[2 + i * 2 + j]]])
-    tile = np.array(tile, dtype="float32")
-    print("tile[0]",tile[0])
-    town=[]
-    road=[]
-    for i,p in enumerate(tile):
-        warp = extract_tile(p,img)
+        for i in range(4 - j):
+            tile_coords.append([[ys[6 + 2 * j], xs[2 + 2 * i + j]],
+                                [ys[7 + 2 * j], xs[1 + i * 2 + j]],
+                                [ys[7 + 2 * j], xs[3 + i * 2 + j]],
+                                [ys[8 + 2 * j], xs[1 + i * 2 + j]],
+                                [ys[8 + 2 * j], xs[3 + i * 2 + j]],
+                                [ys[9 + 2 * j], xs[2 + i * 2 + j]]])
+    tile_coords = np.array(tile_coords, dtype="float32")
+    print("tile[0]", tile_coords[0])
+    town_coords = []
+    road_coords = []
+    tile_img = []
+    town_img = []
+    road_img = []
+    for i, p in enumerate(tile_coords):
+        warp = extract_tile(p, img)
         # ploty[3+i].set_title("Miasto "+str(i))
         # ploty[3+i].imshow(warp)
         checkpoint.append(warp.copy())
+        tile_img.append(warp.copy())
 
-    return tile,town,road
+    return tile_img, town_img, road_img, tile_coords, town_coords, road_coords
+
+
+def zwroc_pokrojone(data, checkpoint):
+    coords, przypadek = kontury_debug(checkpoint[1])
+    warp = 0
+    if przypadek == 0:
+        warp = transform_if_rectangle(data, coords.copy())
+    if przypadek == 1:
+        warp = transform_if_not_rect(data, coords.copy())
+
+    tile_img, town_img, road_img, tile_coords, town_coords, road_coords = krojonko(warp, checkpoint)
+    ploty = wyswietl(checkpoint, nazwapliku)
+    ploty[1].plot(coords[:, 1], coords[:, 0], "+r", markersize=15)
+    return warp, tile_img
+
 
 if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [26]:
+    for file in [22]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
@@ -726,22 +745,16 @@ if __name__ == '__main__':
 
         checkpoint[1] = erosion_loop(checkpoint[1], 5)
 
-        # srodek = srodek_jedynek(checkpoint[1])
-        # checkpoint.append(fill_contour_with_ones(checkpoint[1].copy(),srodek))
+        warp, tile_img = zwroc_pokrojone(data, checkpoint)
 
-        coords, przypadek = kontury_debug(checkpoint[1])
-        warp = 0
-        if przypadek == 0:
-            warp = transform_if_rectangle(data, coords.copy())
-        if przypadek == 1:
-            warp = transform_if_not_rect(data, coords.copy())
-
-        tile,town,road = krojonko(warp,checkpoint)
-        ploty = wyswietl(checkpoint, nazwapliku)
-        ploty[1].plot(coords[:,1],coords[:,0],"+r", markersize=15)
         timestr = time.strftime("%H-%M-%S")
-        io.imsave('wynik-' + str(file) + '-' + timestr + '-warp.png', warp)
-        savefig('wynik' + str(file) + timestr + '.png')
+        file_string = str(file)
+        if file < 10:
+            file_string = '0' + file_string
+        io.imsave('wynik-' + file_string + '-' + timestr + '-warp.png', warp)
+        savefig('wynik-' + file_string + '-' + timestr + '.png')
+        for i, v in enumerate(tile_img):
+            io.imsave('wynik-' + file_string + '-tile-' + str(i) + '-' + timestr + '-warp.png', v)
         io.show()
 
     print("czas wykonywania:", time.time() - start_time)
