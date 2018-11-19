@@ -18,7 +18,6 @@ from numpy import array
 from skimage.measure import label
 from skimage import data, util
 from matplotlib import colors
-import cv2
 from skimage.feature import corner_harris, corner_subpix, corner_peaks
 from skimage.transform import warp, AffineTransform
 from skimage import transform as tf
@@ -56,10 +55,10 @@ def filter_colour(data, min, max, hsv):
                 x[2] = 0
     return data
 
-def filter_colour_reverse(data, min1, max1, min2, max2, min3, max3):
+def filter_colour_reverse(data, min1, max1):
     for array in data:
         for x in array:
-            if x[0] > min1 and x[0] < max1 and x[1] > min2 and x[1] < max2 and x[2] > min3 and x[2] < max3:
+            if x[0] > min1 and x[0] < max1 :
                 x[0] = 0
                 x[1] = 0
                 x[2] = 0
@@ -749,11 +748,12 @@ def findclay(tile,checkpoint):
 
 def findmountains(tile,checkpoint):
     tempcheckpoint = []
-    tempcheckpoint.append( np.array(filter_colour_reverse(rescale(tile, 1.0 / 8.0, anti_aliasing=False), 0.9, 1, 0.75, 0.95, 0.75, 0.9)))
-    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 2)))
-    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 0)))
-    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 1)))
-    checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
+    #tempcheckpoint.append( np.array(filter_colour_reverse(rescale(tile, 1.0 / 8.0, anti_aliasing=False), 0.9, 1, 0.75, 0.95, 0.75, 0.9)))
+    #tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 2)))
+    #tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 0)))
+    #tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 1)))
+
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour_reverse(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0.02,0.5 ))))
     # checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
     return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
 
@@ -816,31 +816,31 @@ def the_great_tile_finder(tiles):
     print(clay)
 
     for i in range(19):
+        temp_list.append(pewnosc(findrobber(tiles[i],checkpoint), 1))
+
+    i = 0
+    while (i < 1):
+        index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
+        if not index in sheep and not index in forest and not index in clay:
+            robber.append(index)
+            i = i + 1
+        temp_list[index] = 0
+    temp_list = []
+    print(robber)
+
+    for i in range(19):
         temp_list.append(pewnosc(findmountains(tiles[i],checkpoint), 1))
 
     i = 0
     print(temp_list)
     while (i < 3):
         index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
-        if not index in sheep and not index in forest and not index in clay:
+        if not index in sheep and not index in forest and not index in clay and not index in robber:
             mountains.append(index)
             i = i + 1
         temp_list[index] = 0
     temp_list = []
     print(mountains)
-
-    for i in range(19):
-        temp_list.append(pewnosc(findrobber(tiles[i],checkpoint), 1))
-
-    i = 0
-    while (i < 1):
-        index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
-        if not index in sheep and not index in forest and not index in clay and not index in mountains:
-            robber.append(index)
-            i = i + 1
-        temp_list[index] = 0
-    temp_list = []
-    print(robber)
 
     for i in range(0,19):
         if not i in sheep and not i in forest and not i in clay and not i in mountains and i not in robber:
@@ -975,7 +975,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [24]:
+    for file in range(21,42):
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
