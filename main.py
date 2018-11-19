@@ -288,18 +288,6 @@ def rozciagnij_3_wartosci(image, first=True, second=True, third=True):
     return img
 
 
-# def find_first_one(img,rangei,rangej,reverse=False):
-#     img2=img
-#     if reverse:
-#         img2=img.copy().T
-#     # wiersze od gory od lewej
-#     for i in rangei:
-#         for j in rangej:
-#             if img2[i][j] == 1:
-#                 if reverse:
-#                     return [j, i]
-#                 else:
-#                     return [i,j]
 
 def fill_contour_with_ones_stary(img):
     img = img.copy()
@@ -520,7 +508,7 @@ def transform_if_rectangle(img, coords):
     tform3 = tf.ProjectiveTransform()
     tform3.estimate(dst, coords)
     warp = tf.warp(img, tform3, output_shape=(len(img), len(img[0])))
-    return warp
+    return warp, dst
 
 
 def transform_if_not_rect(img, coords):
@@ -542,7 +530,7 @@ def transform_if_not_rect(img, coords):
     tform3 = tf.ProjectiveTransform()
     tform3.estimate(dst, coords)
     warp = tf.warp(img, tform3, output_shape=(len(img), len(img[0])))
-    return warp
+    return warp, dst
 
 
 def srodek_jedynek(img):
@@ -713,11 +701,11 @@ def krojonko(img, checkpoint):
     road_img = []
     for i, p in enumerate(tile_coords):
         warp = extract_tile(p, img)
-        checkpoint.append(warp.copy())
+        # checkpoint.append(warp.copy())
         tile_img.append(warp.copy())
     for i, p in enumerate(town_coords):
         warp = extract_town(p, img)
-        checkpoint.append(warp.copy())
+        # checkpoint.append(warp.copy())
         town_img.append(warp.copy())
 
     return tile_img, town_img, road_img, tile_coords, town_coords, road_coords
@@ -864,21 +852,110 @@ def the_great_domki_finder(town_img):
     return domki
 
 
+
+def reverse_warp(warp, checkpoint,coords,dst):
+    tmp = coords[:, 0].copy()
+    coords[:, 0] = coords[:, 1].copy()
+    coords[:, 1] = tmp
+    tform3 = tf.ProjectiveTransform()
+    tform3.estimate( coords, dst)
+    img = tf.warp(warp, tform3, output_shape=(len(warp), len(warp[0])))
+    checkpoint.append(img)
+    return img
+
+def koloruj_tile(img, lista, kolor, tile_coords):
+    dim=75
+    for i in lista:
+        y = tile_coords[i][0][0]+tile_coords[i][5][0]
+        y//=2
+        y=int(y)
+        x= tile_coords[i][0][1]
+        for j in range(-dim,dim):
+            for k in range(-dim, dim):
+                new_y=int(y+j)
+                new_x = int(x+k)
+                img[new_y][new_x]=kolor
+    return img
+
+
+def koloruj_town(img, lista, kolor, town_coords):
+    dim=50
+    for i in lista:
+        y = town_coords[i][0]
+        x= town_coords[i][1]
+        for j in range(-dim,dim):
+            for k in range(-dim, dim):
+                new_y=int(y+j)
+                new_x = int(x+k)
+                img[new_y][new_x]=kolor
+    return img
+
+def wypelnij(img,data):
+    for i in range(len(img)):
+        for j in range(len(img[0])):
+            if img[i][j][0] == 0 and img[i][j][1] == 0 and img[i][j][2] == 0:
+                img[i][j] = data[i][j]
+    return img
+
 def zwroc_pokrojone(data, checkpoint):
     coords, przypadek = kontury_debug(checkpoint[1])
     warp = 0
+    dst= 0
     if przypadek == 0:
-        warp = transform_if_rectangle(data, coords.copy())
+        warp, dst = transform_if_rectangle(data, coords.copy())
     if przypadek == 1:
-        warp = transform_if_not_rect(data, coords.copy())
+        warp, dst = transform_if_not_rect(data, coords.copy())
 
     tile_img, town_img, road_img, tile_coords, town_coords, road_coords = krojonko(warp, checkpoint)
 
-    the_great_tile_finder(tile_img)
-    the_great_domki_finder(town_img)
 
+
+    sheep, forest, clay, mountains, robber, wheat = the_great_tile_finder(tile_img)
+    domki = the_great_domki_finder(town_img)
+    print("DEBUG")
+    print(sheep)
+    print(forest)
+    print(clay)
+    print(mountains)
+    print(robber)
+    print(wheat)
+    print(domki)
+    print("DEBUG")
+
+
+
+    # img = data.copy()
+    #     # for i in range(len(img)):
+    #     #     for j in range(len(img[0])):
+    #     #         img[i][j]=[0,0,0]
+    #     # img=koloruj_piksel(img,sheep,[1,0,0],tile_coords)
+    #     # timestr = time.strftime("%H-%M-%S")
+    #     # io.imsave('debug-' + timestr + '.png', img)
+
+    # warp = tf.warp(img, tform3, output_shape=(len(img), len(img[0])))
+    # sheep, forest, clay, mountains, robber, wheat
+    # checkpoint.append(warp.copy())
+    warp = koloruj_tile(warp, sheep, [0, 1, 0], tile_coords)
+    # checkpoint.append(warp.copy())
+    warp = koloruj_tile(warp, forest, [0, 1, 1], tile_coords)
+    # checkpoint.append(warp.copy())
+    warp = koloruj_tile(warp, clay, [1, 0, 0], tile_coords)
+    # checkpoint.append(warp.copy())
+    warp = koloruj_tile(warp, mountains, [0.1, 0.1, 0.1], tile_coords)
+    # checkpoint.append(warp.copy())
+    warp = koloruj_tile(warp, robber, [1, 1, 0], tile_coords)
+    # checkpoint.append(warp.copy())
+    warp = koloruj_tile(warp, wheat, [1, 0, 1], tile_coords)
+    # checkpoint.append(warp.copy())
+    warp = koloruj_town(warp,domki,[1,1,1],town_coords)
+    warp = reverse_warp(warp, checkpoint, coords, dst)
+    warp = wypelnij(warp,data)
+    # timestr = time.strftime("%H-%M-%S")
+    # io.imsave('wynik-' + file_string + '-checkpoint-' + str(i) + '-' + timestr + '-warp.png', v)
+    # checkpoint.append(warp.copy())
     ploty = wyswietl(checkpoint, nazwapliku)
     ploty[1].plot(coords[:, 1], coords[:, 0], "+r", markersize=15)
+    ploty[2].plot(town_coords[:, 1], town_coords[:, 0], "+r", markersize=15)
     return warp, tile_img,town_img
 
 
@@ -886,7 +963,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [22]:
+    for file in [26]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
@@ -899,15 +976,33 @@ if __name__ == '__main__':
 
         warp, tile_img,town_img = zwroc_pokrojone(data, checkpoint)
 
-        #timestr = time.strftime("%H-%M-%S")
-        #file_string = str(file)
-        #if file < 10:
-        #    file_string = '0' + file_string
+        timestr = time.strftime("%H-%M-%S")
+        file_string = str(file)
+        if file < 10:
+           file_string = '0' + file_string
+        io.imsave('wynik-' + file_string + '-checkpoint-' + timestr + '-warp.png', warp)
         #io.imsave('wynik-' + file_string + '-' + timestr + '-warp.png', warp)
         #savefig('wynik-' + file_string + '-' + timestr + '.png')
         #for i, v in enumerate(tile_img):
         #    io.imsave('wynik-' + file_string + '-tile-' + str(i) + '-' + timestr + '-warp.png', v)
+        # for i, v in enumerate(checkpoint):
+        #     io.imsave('wynik-' + file_string + '-checkpoint-' + str(i) + '-' + timestr + '-warp.png', v)
+        # savefig('wynik-' + file_string + '-' + timestr + '.png')
         io.show()
+
+        # rows = 5
+        # columns = 5
+        # fig = plt.figure(figsize=(10*columns, rows * 10))
+        # l1=[1,0,0,0,1]
+        # l2=[3,4,5,4,3]
+        # k=0
+        # for i in range(rows):
+        #     for j in range(l2[i]):
+        #         ax = fig.add_subplot(rows, columns, 5*i+l1[i]+j+1)
+        #         print(k)
+        #         io.imshow(tile_img[k])
+        # savefig('wynik-' + file_string + '-' + timestr + '2.png')
+        # io.show()
 
     print("czas wykonywania:", time.time() - start_time)
 
