@@ -910,7 +910,7 @@ def wypelnij(img,data):
                 img[i][j] = data[i][j]
     return img
 
-def parallel_check(coords,data,checkpoint):
+def parallel_check(coords,data,checkpoint,para,exception,przypadek):
     print("parallel_check")
     offset=60
     print(coords[1][1])
@@ -929,7 +929,7 @@ def parallel_check(coords,data,checkpoint):
 def zwroc_pokrojone(data, checkpoint):
     data_org = data.copy()
     coords, przypadek,para,exception = kontury_debug(checkpoint[1])
-    coords, przypadek, data, checkpoint, rotated,para,exception = parallel_check(coords, data, checkpoint)
+    coords, przypadek, data, checkpoint, rotated,para,exception = parallel_check(coords, data, checkpoint,para,exception,przypadek)
     warp = 0
     dst= 0
     if przypadek == 0:
@@ -996,7 +996,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [38]:
+    for file in [21]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
