@@ -56,6 +56,15 @@ def filter_colour(data, min, max, hsv):
                 x[2] = 0
     return data
 
+def filter_colour_reverse(data, min1, max1, min2, max2, min3, max3):
+    for array in data:
+        for x in array:
+            if x[0] > min1 and x[0] < max1 and x[1] > min2 and x[1] < max2 and x[2] > min3 and x[2] < max3:
+                x[0] = 0
+                x[1] = 0
+                x[2] = 0
+    return data
+
 
 # zmienia kolor(w hsv) pomiędzy min i max na 1, a reszte na zero
 def filter_colour_hard(data, min, max, hsv):
@@ -740,10 +749,11 @@ def findclay(tile,checkpoint):
 
 def findmountains(tile,checkpoint):
     tempcheckpoint = []
-    tempcheckpoint.append( np.array(filter_colour(rescale(tile, 1.0 / 8.0, anti_aliasing=False), 0.75, 1, 2)))
-    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.75, 1, 0)))
-    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.75, 1, 1)))
-    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0, 0.5, 1))))
+    tempcheckpoint.append( np.array(filter_colour_reverse(rescale(tile, 1.0 / 8.0, anti_aliasing=False), 0.9, 1, 0.75, 0.95, 0.75, 0.9)))
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 2)))
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 0)))
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0.8, 1, 1)))
+    checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
     # checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
     return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
 
@@ -809,6 +819,7 @@ def the_great_tile_finder(tiles):
         temp_list.append(pewnosc(findmountains(tiles[i],checkpoint), 1))
 
     i = 0
+    print(temp_list)
     while (i < 3):
         index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
         if not index in sheep and not index in forest and not index in clay:
@@ -964,7 +975,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [26]:
+    for file in [24]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
