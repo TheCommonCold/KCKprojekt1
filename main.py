@@ -855,7 +855,7 @@ def the_great_domki_finder(town_img):
     for town in town_img:
         temp_list.append(pewnosc(findtown(town, checkpoint), 1))
     index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
-    while (value>0.02):
+    while (value>0.05):
         domki.append(index)
         temp_list[index] = 0
         index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
@@ -874,6 +874,8 @@ def zwroc_pokrojone(data, checkpoint):
 
     tile_img, town_img, road_img, tile_coords, town_coords, road_coords = krojonko(warp, checkpoint)
 
+
+
     the_great_tile_finder(tile_img)
     the_great_domki_finder(town_img)
 
@@ -886,7 +888,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [22]:
+    for file in [39]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
