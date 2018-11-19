@@ -732,7 +732,12 @@ def findsheep(tile,checkpoint):
 
 def findforest(tile,checkpoint):
     tempcheckpoint = []
-    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0.3, 0.45, 0))))
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0.24, 0.45, 0))))
+    #checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
+    #tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1, 1, 1))))
+    #checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0, 0.8, 2))))
+    #checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
     #checkpoint.append(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.4, 2)))
     #checkpoint.append(erosion_loop(rgb2gray(checkpoint[len(checkpoint) - 1]), 1))
     #checkpoint.append(dilation_loop(checkpoint[len(checkpoint) - 1], 8))
@@ -741,8 +746,13 @@ def findforest(tile,checkpoint):
 
 def findclay(tile,checkpoint):
     tempcheckpoint = []
-    tempcheckpoint.append(hsv2rgb( np.array(filter_colour(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0, 0.06, 0))))
-    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.2, 1, 1))))
+    tempcheckpoint.append(hsv2rgb( np.array(filter_colour(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0, 0.07, 0))))
+    #checkpoint.append(tempcheckpoint[len(tempcheckpoint)-1])
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.3, 0.8, 1))))
+    #checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
+    tempcheckpoint.append(
+        hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.0, 0.7, 2))))
+    #checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
     # checkpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(checkpoint[len(checkpoint) - 1]), 0, 0.9, 1))))
     return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
 
@@ -770,8 +780,11 @@ def findrobber(tile,checkpoint):
 
 def findtown(tile,checkpoint):
     tempcheckpoint = []
-    tempcheckpoint.append(np.array(filter_colour(rescale(tile, 1.0 / 8.0, anti_aliasing=False), 0, 0.08, 1)))
-    tempcheckpoint.append(hsv2rgb(np.array(filter_colour(rgb2hsv(tempcheckpoint[len(tempcheckpoint) - 1]), 0.5, 1, 1))))
+    tempcheckpoint.append(hsv2rgb(np.array(filter_colour_reverse(rgb2hsv(rescale(tile, 1.0 / 8.0, anti_aliasing=False)), 0.06, 0.95))))
+    #checkpoint.append(tempcheckpoint[len(tempcheckpoint)-1])
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0, 0.1, 1)))
+    tempcheckpoint.append(np.array(filter_colour(tempcheckpoint[len(tempcheckpoint) - 1], 0, 0.1, 2)))
+    #checkpoint.append(tempcheckpoint[len(tempcheckpoint) - 1])
     return (threshold(rgb2gray(tempcheckpoint[len(tempcheckpoint) - 1]), 0.1))
 
 def the_great_tile_finder(tiles):
@@ -785,21 +798,29 @@ def the_great_tile_finder(tiles):
     for i in range(19):
        temp_list.append(pewnosc(findsheep(tiles[i],checkpoint),1))
     i=0
+    j=0
     while(i<4):
        index, value= max(enumerate(temp_list), key=operator.itemgetter(1))
        sheep.append(index)
        i = i + 1
+       j=j+1
+       if(j>19):
+           break
        temp_list[index]=0
     temp_list = []
     print(sheep)
     for i in range(19):
        temp_list.append(pewnosc(findforest(tiles[i],checkpoint), 1))
     i=0
+    j = 0
     while(i<4):
        index, value= max(enumerate(temp_list), key=operator.itemgetter(1))
        if not index in sheep:
            forest.append(index)
            i=i+1
+       j = j + 1
+       if (j > 19):
+           break
        temp_list[index]=0
     temp_list = []
     print(forest)
@@ -807,11 +828,15 @@ def the_great_tile_finder(tiles):
         temp_list.append(pewnosc(findclay(tiles[i],checkpoint),1))
 
     i=0
+    j = 0
     while(i<3):
         index, value= max(enumerate(temp_list), key=operator.itemgetter(1))
         if not index in sheep and not index in forest:
             clay.append(index)
             i=i+1
+        j = j + 1
+        if (j > 19):
+            break
         temp_list[index]=0
     temp_list = []
     print(clay)
@@ -820,11 +845,15 @@ def the_great_tile_finder(tiles):
         temp_list.append(pewnosc(findrobber(tiles[i],checkpoint), 1))
 
     i = 0
+    j = 0
     while (i < 1):
         index, value = max(enumerate(temp_list), key=operator.itemgetter(1))
         if not index in sheep and not index in forest and not index in clay:
             robber.append(index)
             i = i + 1
+        j = j + 1
+        if (j > 19):
+            break
         temp_list[index] = 0
     temp_list = []
     print(robber)
@@ -996,7 +1025,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in [21]:
+    for file in [22]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
@@ -1021,7 +1050,7 @@ if __name__ == '__main__':
         # for i, v in enumerate(checkpoint):
         #     io.imsave('wynik-' + file_string + '-checkpoint-' + str(i) + '-' + timestr + '-warp.png', v)
         # savefig('wynik-' + file_string + '-' + timestr + '.png')
-        io.show()
+        #io.show()
 
         # rows = 5
         # columns = 5
@@ -1074,5 +1103,5 @@ if __name__ == '__main__':
     # coords = measure.approximate_polygon(contours[najwiekszy_contour(contours)], tolerance=2)
     # coords=usuwanko_punktow(coords)
 
-    # io.show()
+    io.show()
     # print(time.time() - start_time)
