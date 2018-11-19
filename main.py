@@ -909,8 +909,26 @@ def wypelnij(img,data):
                 img[i][j] = data[i][j]
     return img
 
+def parallel_check(coords,data,checkpoint):
+    print("parallel_check")
+    offset=60
+    print(coords[1][1])
+    print(coords[3][1])
+    print(coords[0][0])
+    print(coords[2][0])
+    rotated=False
+    if coords[3][0]+offset>coords[1][0]>coords[3][0]-offset or coords[0][1]+offset>coords[2][1]>coords[0][1]-offset:
+        data = rotate(data, 5)
+        checkpoint, contours = background_removal(data.copy())
+        checkpoint[1] = erosion_loop(checkpoint[1], 5)
+        coords, przypadek = kontury_debug(checkpoint[1])
+        rotated = True
+    return coords,przypadek, data,checkpoint,rotated
+
 def zwroc_pokrojone(data, checkpoint):
-    coords, przypadek, para, exception = kontury_debug(checkpoint[1])
+    data_org = data.copy()
+    coords, przypadek = kontury_debug(checkpoint[1])
+    coords,przypadek, data,checkpoint,rotated = parallel_check(coords,data,checkpoint)
     warp = 0
     dst= 0
     if przypadek == 0:
@@ -961,7 +979,9 @@ def zwroc_pokrojone(data, checkpoint):
     # checkpoint.append(warp.copy())
     warp = koloruj_town(warp,domki,[1,1,1],town_coords)
     warp = reverse_warp(warp, checkpoint, coords, dst)
-    warp = wypelnij(warp,data)
+    if rotated:
+        warp = rotate(warp,-5)
+    warp = wypelnij(warp,data_org)
     # timestr = time.strftime("%H-%M-%S")
     # io.imsave('wynik-' + file_string + '-checkpoint-' + str(i) + '-' + timestr + '-warp.png', v)
     # checkpoint.append(warp.copy())
