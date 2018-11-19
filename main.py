@@ -22,6 +22,7 @@ from skimage.feature import corner_harris, corner_subpix, corner_peaks
 from skimage.transform import warp, AffineTransform
 from skimage import transform as tf
 import operator
+from skimage.transform import rotate
 
 io.use_plugin('matplotlib')
 
@@ -921,14 +922,14 @@ def parallel_check(coords,data,checkpoint):
         data = rotate(data, 5)
         checkpoint, contours = background_removal(data.copy())
         checkpoint[1] = erosion_loop(checkpoint[1], 5)
-        coords, przypadek = kontury_debug(checkpoint[1])
+        coords, przypadek,para,exception = kontury_debug(checkpoint[1])
         rotated = True
-    return coords,przypadek, data,checkpoint,rotated
+    return coords, przypadek, data,checkpoint,rotated,para,exception
 
 def zwroc_pokrojone(data, checkpoint):
     data_org = data.copy()
-    coords, przypadek = kontury_debug(checkpoint[1])
-    coords,przypadek, data,checkpoint,rotated = parallel_check(coords,data,checkpoint)
+    coords, przypadek,para,exception = kontury_debug(checkpoint[1])
+    coords, przypadek, data, checkpoint, rotated,para,exception = parallel_check(coords, data, checkpoint)
     warp = 0
     dst= 0
     if przypadek == 0:
@@ -988,14 +989,14 @@ def zwroc_pokrojone(data, checkpoint):
     ploty = wyswietl(checkpoint, nazwapliku)
     ploty[1].plot(coords[:, 1], coords[:, 0], "+r", markersize=15)
     ploty[2].plot(town_coords[:, 1], town_coords[:, 0], "+r", markersize=15)
-    return warp, tile_img,town_img
+    return warp, tile_img, town_img
 
 
 if __name__ == '__main__':
 
     start_time = time.time()
     # for file in range(21, 30):
-    for file in range(21,42):
+    for file in [38]:
         # for file in range(31, 43):
         nazwapliku = str(file) + ".jpg"
         print(nazwapliku)
